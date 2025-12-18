@@ -1,0 +1,15 @@
+# Database
+psycopg2-binary==2.9.9
+
+# Environment
+python-dotenv==1.0.0
+
+# ML/Embedding
+torch>=2.0.0
+transformers>=4.35.0
+
+# Scheduler
+APScheduler==3.10.4
+
+# Utilities
+numpy>=1.24.0
