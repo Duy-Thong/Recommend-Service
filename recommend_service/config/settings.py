@@ -16,7 +16,7 @@ class Settings:
     # Embedding model
     embedding_model: str = os.getenv(
         "EMBEDDING_MODEL",
-        "vovanphuc/phobert-base-v2"
+        "VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"
     )
 
     # Recommendation settings

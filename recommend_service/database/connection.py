@@ -2,8 +2,8 @@ import logging
 from contextlib import contextmanager
 from typing import Generator
 
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import psycopg
+from psycopg.rows import dict_row
 
 from recommend_service.config import settings
 
@@ -19,7 +19,7 @@ class DatabaseConnection:
         """Get a database connection with automatic cleanup"""
         conn = None
         try:
-            conn = psycopg2.connect(self.connection_string)
+            conn = psycopg.connect(self.connection_string)
             yield conn
         except Exception as e:
             logger.error(f"Database connection error: {e}")
@@ -32,8 +32,8 @@ class DatabaseConnection:
     def get_cursor(self, dict_cursor: bool = True) -> Generator:
         """Get a database cursor with automatic cleanup"""
         with self.get_connection() as conn:
-            cursor_factory = RealDictCursor if dict_cursor else None
-            cursor = conn.cursor(cursor_factory=cursor_factory)
+            row_factory = dict_row if dict_cursor else None
+            cursor = conn.cursor(row_factory=row_factory)
             try:
                 yield cursor
                 conn.commit()
