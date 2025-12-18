@@ -5,6 +5,7 @@ Maps CSV columns to database schema and creates nested records (skills, experien
 
 import csv
 import logging
+import random
 import sys
 import uuid
 import re
@@ -89,6 +90,44 @@ SKILL_LEVEL_MAP = {
     "expert": "EXPERT",
 }
 
+# ============================================
+# DEFAULT VALUES
+# ============================================
+DEFAULT_WEBSITE = "https://ptit.edu.vn/"
+DEFAULT_FOUNDED_YEAR = 2021
+DEFAULT_PHONE = "0123456789"
+DEFAULT_LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/jobsconnect-dafde.firebasestorage.app/o/logos%2Fcmgweqlmw0002nyow0t3e8jgt%2F1761150525314.jpg?alt=media&token=0d37d58c-6edd-47c2-b64e-edc6d9f7f60a"
+
+
+def normalize_company_name_to_email(name: str) -> str:
+    """Convert company name to email format"""
+    import unicodedata
+    # Remove Vietnamese diacritics
+    normalized = unicodedata.normalize('NFD', name)
+    ascii_name = ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
+    # Remove special characters, keep only alphanumeric and spaces
+    clean = re.sub(r'[^a-zA-Z0-9\s]', '', ascii_name)
+    # Replace spaces with dots, lowercase
+    email_prefix = clean.lower().replace(' ', '.')
+    # Remove consecutive dots and trim
+    email_prefix = re.sub(r'\.+', '.', email_prefix).strip('.')
+    return f"{email_prefix}@gmail.com" if email_prefix else "company@gmail.com"
+
+
+def parse_deadline(deadline_str: str) -> Optional[datetime]:
+    """Parse deadline string to datetime"""
+    if not deadline_str:
+        return None
+    try:
+        # Try format: DD/MM/YYYY
+        return datetime.strptime(deadline_str.strip(), "%d/%m/%Y")
+    except ValueError:
+        try:
+            # Try format: YYYY-MM-DD
+            return datetime.strptime(deadline_str.strip(), "%Y-%m-%d")
+        except ValueError:
+            return None
+
 
 def parse_salary(salary_str: str) -> Tuple[Optional[int], Optional[int], bool]:
     """Parse salary string to min, max amounts and negotiable flag"""
@@ -172,11 +211,19 @@ class DataImporter:
         # Create new
         company_id = str(uuid.uuid4())
         company_size = map_company_size(size)
+        company_email = normalize_company_name_to_email(name)
 
         cursor.execute('''
-            INSERT INTO companies (id, name, description, "companySize", address, status, "createdAt", "updatedAt")
-            VALUES (%s, %s, %s, %s, %s, 'ACTIVE', NOW(), NOW())
-        ''', (company_id, name, description, company_size, address))
+            INSERT INTO companies (
+                id, name, description, "companySize", address, status,
+                website, "foundedYear", phone, email, "logoUrl",
+                "createdAt", "updatedAt"
+            )
+            VALUES (%s, %s, %s, %s, %s, 'ACTIVE', %s, %s, %s, %s, %s, NOW(), NOW())
+        ''', (
+            company_id, name, description, company_size, address,
+            DEFAULT_WEBSITE, DEFAULT_FOUNDED_YEAR, DEFAULT_PHONE, company_email, DEFAULT_LOGO_URL
+        ))
 
         self.company_cache[name] = company_id
         logger.info(f"Created company: {name}")
@@ -305,21 +352,29 @@ class DataImporter:
                                      EXPERIENCE_LEVEL_MAP)
         job_type = map_enum(row.get("Job Type"), JOB_TYPE_MAP, "FULL_TIME")
 
+        # Get job title and description with defaults
+        job_title = row.get("Job Title", "").strip() or "Untitled"
+        job_description = row.get("Job Description", "").strip() or f"Mô tả công việc: {job_title}"
+
+        # Parse deadline
+        expires_at = parse_deadline(row.get("Submission Deadline", ""))
+
         # Insert job (embedding sẽ được tạo sau)
         cursor.execute('''
             INSERT INTO jobs (
                 id, "companyId", title, description, location, industry,
-                "experienceLevel", type, status, "createdAt", "updatedAt"
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'ACTIVE', NOW(), NOW())
+                "experienceLevel", type, status, "expiresAt", "createdAt", "updatedAt"
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'ACTIVE', %s, NOW(), NOW())
         ''', (
             job_id,
             company_id,
-            row.get("Job Title", "Untitled"),
-            row.get("Job Description"),
+            job_title,
+            job_description,
             row.get("Job Address"),
             row.get("Industry"),
             experience_level,
-            job_type
+            job_type,
+            expires_at
         ))
 
         # Insert salary
@@ -345,7 +400,7 @@ class DataImporter:
                 VALUES (%s, %s, %s, NOW(), NOW())
             ''', (str(uuid.uuid4()), job_id, benefit[:500]))
 
-    def import_cvs(self, csv_path: str, limit: int = None):
+    def import_cvs(self, csv_path: str, limit: int = None, random_sample: bool = True):
         """Import CVs from CSV"""
         logger.info(f"Importing CVs from {csv_path}")
 
@@ -353,8 +408,16 @@ class DataImporter:
             reader = csv.DictReader(f)
             rows = list(reader)
 
-        if limit:
-            rows = rows[:limit]
+        # Default limit for CVs is 5000 (random sample)
+        if limit is None:
+            limit = 5000
+
+        if limit and len(rows) > limit:
+            if random_sample:
+                logger.info(f"Randomly sampling {limit} CVs from {len(rows)} total")
+                rows = random.sample(rows, limit)
+            else:
+                rows = rows[:limit]
 
         imported = 0
         skipped = 0
