@@ -434,7 +434,8 @@ class DataImporter:
             name=company_name,
             description=row.get("Company Overview"),
             size=row.get("Company Size"),
-            address=row.get("Company Address")
+            address=row.get("Company Address"),
+            industry=row.get("Industry")
         )
 
     def import_jobs(self, csv_path: str, limit: int = None):
