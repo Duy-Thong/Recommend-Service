@@ -13,6 +13,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 
+import psycopg
+import psycopg.rows
+
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -407,18 +410,27 @@ class DataImporter:
 
         imported = 0
         skipped = 0
+        batch_size = 100
 
-        with self.db.get_cursor() as cursor:
-            for row in rows:
-                try:
-                    self._import_company_row(cursor, row)
-                    imported += 1
-                except Exception as e:
-                    logger.error(f"Error importing company: {e}")
-                    skipped += 1
-
-                if imported % 100 == 0 and imported > 0:
-                    logger.info(f"Imported {imported} companies...")
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor(row_factory=psycopg.rows.dict_row)
+            try:
+                for row in rows:
+                    try:
+                        self._import_company_row(cursor, row)
+                        imported += 1
+                        
+                        if imported % batch_size == 0:
+                            conn.commit()
+                            logger.info(f"Imported {imported} companies...")
+                    except Exception as e:
+                        logger.error(f"Error importing company '{row.get('Name Company', 'Unknown')}': {e}")
+                        conn.rollback()
+                        skipped += 1
+                
+                conn.commit()
+            finally:
+                cursor.close()
 
         logger.info(f"Companies import complete: {imported} imported, {skipped} skipped")
 
@@ -451,18 +463,29 @@ class DataImporter:
 
         imported = 0
         skipped = 0
+        batch_size = 100
 
-        with self.db.get_cursor() as cursor:
-            for row in rows:
-                try:
-                    self._import_job_row(cursor, row)
-                    imported += 1
-                except Exception as e:
-                    logger.error(f"Error importing job: {e}")
-                    skipped += 1
-
-                if imported % 100 == 0:
-                    logger.info(f"Imported {imported} jobs...")
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor(row_factory=psycopg.rows.dict_row)
+            try:
+                for i, row in enumerate(rows):
+                    try:
+                        self._import_job_row(cursor, row)
+                        imported += 1
+                        
+                        # Commit every batch_size rows
+                        if imported % batch_size == 0:
+                            conn.commit()
+                            logger.info(f"Imported {imported} jobs...")
+                    except Exception as e:
+                        logger.error(f"Error importing job '{row.get('Job Title', 'Unknown')}': {e}")
+                        conn.rollback()  # Rollback failed transaction
+                        skipped += 1
+                
+                # Final commit for remaining rows
+                conn.commit()
+            finally:
+                cursor.close()
 
         logger.info(f"Jobs import complete: {imported} imported, {skipped} skipped")
 
@@ -542,8 +565,8 @@ class DataImporter:
         skills = extract_skills_from_text(combined_text)
         for skill in skills[:20]:  # Limit to 20 skills per job
             cursor.execute('''
-                INSERT INTO job_skills (id, "jobId", "skillName", "createdAt", "updatedAt")
-                VALUES (%s, %s, %s, NOW(), NOW())
+                INSERT INTO job_skills (id, "jobId", "skillName", level, "createdAt", "updatedAt")
+                VALUES (%s, %s, %s, 'INTERMEDIATE', NOW(), NOW())
             ''', (str(uuid.uuid4()), job_id, skill[:100]))
 
     def import_cvs(self, csv_path: str, limit: int = None, random_sample: bool = True):
@@ -567,18 +590,27 @@ class DataImporter:
 
         imported = 0
         skipped = 0
+        batch_size = 100
 
-        with self.db.get_cursor() as cursor:
-            for row in rows:
-                try:
-                    self._import_cv_row(cursor, row)
-                    imported += 1
-                except Exception as e:
-                    logger.error(f"Error importing CV: {e}")
-                    skipped += 1
-
-                if imported % 100 == 0:
-                    logger.info(f"Imported {imported} CVs...")
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor(row_factory=psycopg.rows.dict_row)
+            try:
+                for row in rows:
+                    try:
+                        self._import_cv_row(cursor, row)
+                        imported += 1
+                        
+                        if imported % batch_size == 0:
+                            conn.commit()
+                            logger.info(f"Imported {imported} CVs...")
+                    except Exception as e:
+                        logger.error(f"Error importing CV for user '{row.get('user_name', 'Unknown')}': {e}")
+                        conn.rollback()
+                        skipped += 1
+                
+                conn.commit()
+            finally:
+                cursor.close()
 
         logger.info(f"CVs import complete: {imported} imported, {skipped} skipped")
 
