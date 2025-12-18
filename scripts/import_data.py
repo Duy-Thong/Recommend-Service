@@ -90,6 +90,104 @@ SKILL_LEVEL_MAP = {
     "expert": "EXPERT",
 }
 
+# Common skills to extract from job descriptions/requirements
+COMMON_SKILLS = [
+    # ============ IT / TECH ============
+    # Programming Languages
+    "Python", "Java", "JavaScript", "TypeScript", "C#", "C++", "PHP", "Ruby", "Go", "Golang",
+    "Swift", "Kotlin", "Rust", "Scala", "R", "MATLAB", "Perl", "Shell", "Bash",
+    # Web Frontend
+    "HTML", "CSS", "React", "ReactJS", "React.js", "Angular", "AngularJS", "Vue", "Vue.js", "VueJS",
+    "Next.js", "NextJS", "Nuxt.js", "jQuery", "Bootstrap", "Tailwind", "SASS", "SCSS", "Webpack",
+    # Web Backend
+    "Node.js", "NodeJS", "Express", "Express.js", "Django", "Flask", "FastAPI", "Spring", "Spring Boot",
+    "Laravel", "Symfony", "Rails", "Ruby on Rails", "ASP.NET", ".NET", ".NET Core",
+    # Mobile
+    "React Native", "Flutter", "iOS", "Android", "Xamarin",
+    # Databases
+    "SQL", "MySQL", "PostgreSQL", "MongoDB", "Redis", "Elasticsearch", "Oracle", "SQL Server",
+    "SQLite", "Cassandra", "DynamoDB", "Firebase",
+    # Cloud & DevOps
+    "AWS", "Azure", "GCP", "Google Cloud", "Docker", "Kubernetes", "K8s", "Jenkins", "CI/CD",
+    "Terraform", "Ansible", "Linux", "Unix", "Nginx", "Apache",
+    # Data & AI
+    "Machine Learning", "Deep Learning", "AI", "TensorFlow", "PyTorch", "Keras", "Pandas", "NumPy",
+    "Scikit-learn", "NLP", "Computer Vision", "Big Data", "Hadoop", "Spark", "Data Science",
+    # Tools
+    "Git", "GitHub", "GitLab", "Bitbucket", "Jira", "Confluence", "Agile", "Scrum",
+    "REST API", "RESTful", "GraphQL", "Microservices", "API",
+    # Design
+    "Figma", "Adobe XD", "Photoshop", "Illustrator", "UI/UX", "Webflow", "Shopify", "WordPress",
+    "InDesign", "After Effects", "Premiere", "CorelDraw", "Canva", "Sketch",
+    
+    # ============ KINH DOANH / BÁN HÀNG ============
+    "Bán hàng", "Sales", "Telesales", "Tư vấn bán hàng", "Chăm sóc khách hàng", "CSKH",
+    "B2B", "B2C", "KPI", "Đàm phán", "Thương lượng", "Chốt sales", "Tìm kiếm khách hàng",
+    "Quản lý khách hàng", "CRM", "Salesforce", "HubSpot", "Phát triển thị trường",
+    
+    # ============ MARKETING / TRUYỀN THÔNG ============
+    "Marketing", "Digital Marketing", "Content Marketing", "SEO", "SEM", "Google Ads",
+    "Facebook Ads", "Social Media", "Branding", "PR", "Truyền thông", "Quảng cáo",
+    "Content Creator", "Copywriting", "Email Marketing", "Influencer Marketing",
+    "Google Analytics", "Marketing Automation", "Inbound Marketing", "Outbound Marketing",
+    "TikTok", "YouTube", "Instagram", "LinkedIn", "Zalo", "Video Marketing",
+    
+    # ============ KẾ TOÁN / TÀI CHÍNH ============
+    "Kế toán", "Kế toán tổng hợp", "Kế toán thuế", "Kế toán công nợ", "Kế toán kho",
+    "Kiểm toán", "Tài chính", "Phân tích tài chính", "Báo cáo tài chính", "BCTC",
+    "SAP", "MISA", "Fast Accounting", "Bravo", "ERP", "Thuế GTGT", "Thuế TNDN",
+    "Excel nâng cao", "Pivot Table", "VLOOKUP", "Ngân sách", "Định giá", "Đầu tư",
+    
+    # ============ NHÂN SỰ ============
+    "Nhân sự", "HR", "Tuyển dụng", "Recruitment", "Headhunter", "Đào tạo", "Training",
+    "C&B", "Lương thưởng", "Phúc lợi", "BHXH", "BHYT", "Hợp đồng lao động",
+    "Đánh giá nhân viên", "KPI", "OKR", "Văn hóa doanh nghiệp", "Employer Branding",
+    
+    # ============ HÀNH CHÍNH / VĂN PHÒNG ============
+    "Hành chính", "Văn phòng", "Thư ký", "Trợ lý", "Lễ tân", "Admin",
+    "Quản lý văn phòng", "Soạn thảo văn bản", "Lưu trữ hồ sơ", "Tiếp khách",
+    
+    # ============ NGÂN HÀNG / BẢO HIỂM ============
+    "Ngân hàng", "Tín dụng", "Cho vay", "Thẩm định", "Bảo hiểm", "Bảo hiểm nhân thọ",
+    "Bancassurance", "Tư vấn tài chính", "Đầu tư", "Chứng khoán", "Quỹ đầu tư",
+    
+    # ============ Y TẾ / DƯỢC ============
+    "Y tế", "Dược", "Điều dưỡng", "Bác sĩ", "Y sĩ", "Dược sĩ", "Trình dược viên",
+    "Chăm sóc sức khỏe", "Bệnh viện", "Phòng khám", "Thiết bị y tế",
+    
+    # ============ GIÁO DỤC / ĐÀO TẠO ============
+    "Giáo dục", "Đào tạo", "Giảng dạy", "Giáo viên", "Gia sư", "IELTS", "TOEIC",
+    "Tiếng Anh trẻ em", "Mầm non", "Tiểu học", "THCS", "THPT", "Đại học",
+    
+    # ============ KHÁCH SẠN / NHÀ HÀNG ============
+    "Khách sạn", "Nhà hàng", "F&B", "Hospitality", "Lễ tân khách sạn", "Housekeeping",
+    "Đầu bếp", "Phục vụ", "Bartender", "Barista", "Quản lý nhà hàng",
+    
+    # ============ XÂY DỰNG / BẤT ĐỘNG SẢN ============
+    "Xây dựng", "Kiến trúc", "Thiết kế nội thất", "AutoCAD", "Revit", "SketchUp",
+    "3D Max", "Giám sát công trình", "Kỹ sư xây dựng", "Dự toán", "Bất động sản",
+    "Môi giới BĐS", "Tư vấn BĐS", "Định giá BĐS",
+    
+    # ============ CƠ KHÍ / ĐIỆN / SẢN XUẤT ============
+    "Cơ khí", "Điện", "Điện tử", "Điện lạnh", "Tự động hóa", "PLC", "SCADA",
+    "Bảo trì", "Bảo dưỡng", "Vận hành máy", "QA", "QC", "Quản lý chất lượng",
+    "ISO", "5S", "Lean", "Six Sigma", "Kaizen", "Sản xuất",
+    
+    # ============ VẬN TẢI / LOGISTICS ============
+    "Logistics", "Vận tải", "Xuất nhập khẩu", "XNK", "Hải quan", "Kho vận",
+    "Supply Chain", "Chuỗi cung ứng", "Giao nhận", "Forwarder", "Lái xe",
+    
+    # ============ NGÔN NGỮ ============
+    "Tiếng Anh", "Tiếng Nhật", "Tiếng Hàn", "Tiếng Trung", "Tiếng Pháp", "Tiếng Đức",
+    "N1", "N2", "N3", "JLPT", "TOPIK", "HSK", "Biên phiên dịch", "Thông dịch",
+    
+    # ============ KỸ NĂNG MỀM / CHUNG ============
+    "Tin học văn phòng", "MS Office", "Excel", "Word", "PowerPoint", "Google Sheets",
+    "Kỹ năng giao tiếp", "Làm việc nhóm", "Teamwork", "Quản lý thời gian",
+    "Giải quyết vấn đề", "Tư duy logic", "Chịu áp lực", "Đa nhiệm",
+    "Thuyết trình", "Đàm phán", "Lãnh đạo", "Leadership", "Quản lý dự án", "PMP",
+]
+
 # ============================================
 # DEFAULT VALUES
 # ============================================
@@ -188,6 +286,31 @@ def split_text_to_items(text: str, delimiters: List[str] = None) -> List[str]:
     return items
 
 
+def extract_skills_from_text(text: str) -> List[str]:
+    """Extract skills from text by matching against common skills list"""
+    if not text:
+        return []
+    
+    found_skills = set()
+    text_lower = text.lower()
+    
+    for skill in COMMON_SKILLS:
+        # Case-insensitive search
+        skill_lower = skill.lower()
+        # Use word boundary matching to avoid partial matches
+        # e.g., "R" shouldn't match "React"
+        if len(skill) <= 2:
+            # For short skills like "R", "C", "Go", require word boundaries
+            pattern = r'\b' + re.escape(skill_lower) + r'\b'
+            if re.search(pattern, text_lower):
+                found_skills.add(skill)
+        else:
+            if skill_lower in text_lower:
+                found_skills.add(skill)
+    
+    return list(found_skills)
+
+
 class DataImporter:
     def __init__(self):
         self.db = DatabaseConnection()
@@ -195,17 +318,29 @@ class DataImporter:
         self.user_cache = {}  # (name, userid) -> id
 
     def get_or_create_company(self, cursor, name: str, description: str = None,
-                               size: str = None, address: str = None) -> str:
+                               size: str = None, address: str = None, industry: str = None) -> str:
         """Get existing company or create new one"""
         if name in self.company_cache:
+            # If company exists in cache but we have new industry info, update it
+            if industry:
+                cursor.execute('''
+                    UPDATE companies SET industry = COALESCE(industry, %s), "updatedAt" = NOW()
+                    WHERE name = %s AND industry IS NULL
+                ''', (industry, name))
             return self.company_cache[name]
 
         # Check if exists
-        cursor.execute('SELECT id FROM companies WHERE name = %s', (name,))
+        cursor.execute('SELECT id, industry FROM companies WHERE name = %s', (name,))
         result = cursor.fetchone()
 
         if result:
             self.company_cache[name] = result["id"]
+            # Update industry if company doesn't have one yet
+            if industry and not result.get("industry"):
+                cursor.execute('''
+                    UPDATE companies SET industry = %s, "updatedAt" = NOW()
+                    WHERE id = %s
+                ''', (industry, result["id"]))
             return result["id"]
 
         # Create new
@@ -215,13 +350,13 @@ class DataImporter:
 
         cursor.execute('''
             INSERT INTO companies (
-                id, name, description, "companySize", address, status,
+                id, name, description, "companySize", address, industry, status,
                 website, "foundedYear", phone, email, "logoUrl",
                 "createdAt", "updatedAt"
             )
-            VALUES (%s, %s, %s, %s, %s, 'ACTIVE', %s, %s, %s, %s, %s, NOW(), NOW())
+            VALUES (%s, %s, %s, %s, %s, %s, 'ACTIVE', %s, %s, %s, %s, %s, NOW(), NOW())
         ''', (
-            company_id, name, description, company_size, address,
+            company_id, name, description, company_size, address, industry,
             DEFAULT_WEBSITE, DEFAULT_FOUNDED_YEAR, DEFAULT_PHONE, company_email, DEFAULT_LOGO_URL
         ))
 
@@ -341,7 +476,8 @@ class DataImporter:
             name=company_name,
             description=row.get("Company Overview"),
             size=row.get("Company Size"),
-            address=row.get("Company Address")
+            address=row.get("Company Address"),
+            industry=row.get("Industry")
         )
 
         # Parse salary
@@ -399,6 +535,15 @@ class DataImporter:
                 INSERT INTO job_benefits (id, "jobId", title, "createdAt", "updatedAt")
                 VALUES (%s, %s, %s, NOW(), NOW())
             ''', (str(uuid.uuid4()), job_id, benefit[:500]))
+
+        # Extract and insert skills from both Job Requirements and Job Description
+        combined_text = f"{row.get('Job Requirements', '')} {row.get('Job Description', '')}"
+        skills = extract_skills_from_text(combined_text)
+        for skill in skills[:20]:  # Limit to 20 skills per job
+            cursor.execute('''
+                INSERT INTO job_skills (id, "jobId", "skillName", "createdAt", "updatedAt")
+                VALUES (%s, %s, %s, NOW(), NOW())
+            ''', (str(uuid.uuid4()), job_id, skill[:100]))
 
     def import_cvs(self, csv_path: str, limit: int = None, random_sample: bool = True):
         """Import CVs from CSV"""
