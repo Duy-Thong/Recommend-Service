@@ -87,10 +87,10 @@ class CVRepository:
     def compute_content_hash(cv: dict, skills: List[dict], experiences: List[dict]) -> str:
         """Compute hash of CV content to detect changes (only fields used for embedding)"""
         content = {
-            "title": cv.get("title", ""),
-            "currentPosition": cv.get("currentPosition", ""),
-            "skills": [s.get("skillName", "") for s in skills],
-            "experiences": [e.get("title", "") + e.get("description", "") for e in experiences]
+            "title": cv.get("title") or "",
+            "currentPosition": cv.get("currentPosition") or "",
+            "skills": [(s.get("skillName") or "") for s in skills],
+            "experiences": [(e.get("title") or "") + (e.get("description") or "") for e in experiences]
         }
         content_str = json.dumps(content, sort_keys=True)
         return hashlib.md5(content_str.encode()).hexdigest()
@@ -174,9 +174,9 @@ class JobRepository:
     def compute_content_hash(job: dict, skills: List[dict], requirements: List[dict]) -> str:
         """Compute hash of job content to detect changes (only fields used for embedding)"""
         content = {
-            "title": job.get("title", ""),
-            "skills": [s.get("skillName", "") for s in skills],
-            "requirements": [r.get("title", "") + r.get("description", "") for r in requirements]
+            "title": job.get("title") or "",
+            "skills": [(s.get("skillName") or "") for s in skills],
+            "requirements": [(r.get("title") or "") + (r.get("description") or "") for r in requirements]
         }
         content_str = json.dumps(content, sort_keys=True)
         return hashlib.md5(content_str.encode()).hexdigest()

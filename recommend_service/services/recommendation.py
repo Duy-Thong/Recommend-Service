@@ -121,12 +121,12 @@ class RecommendationService:
         title_embedding = self.embedding_service.get_embedding(job.title)
 
         # Generate skills embedding
-        skills_text = " ".join([s["skillName"] for s in skills])
-        skills_embedding = self.embedding_service.get_embedding(skills_text) if skills_text else None
+        skills_text = " ".join([(s.get("skillName") or "") for s in skills])
+        skills_embedding = self.embedding_service.get_embedding(skills_text) if skills_text.strip() else None
 
         # Generate requirements embedding
-        req_text = " ".join([f"{r['title']} {r.get('description', '')}" for r in requirements])
-        requirement_embedding = self.embedding_service.get_embedding(req_text) if req_text else None
+        req_text = " ".join([f"{r.get('title') or ''} {r.get('description') or ''}" for r in requirements])
+        requirement_embedding = self.embedding_service.get_embedding(req_text) if req_text.strip() else None
 
         # Update in DB
         self.job_repo.update_job_embeddings(
@@ -183,12 +183,12 @@ class RecommendationService:
         title_embedding = self.embedding_service.get_embedding(title_text)
 
         # Generate skills embedding
-        skills_text = " ".join([s["skillName"] for s in skills])
-        skills_embedding = self.embedding_service.get_embedding(skills_text) if skills_text else None
+        skills_text = " ".join([(s.get("skillName") or "") for s in skills])
+        skills_embedding = self.embedding_service.get_embedding(skills_text) if skills_text.strip() else None
 
         # Generate experience embedding
-        exp_text = " ".join([f"{e['title']} {e.get('description', '')}" for e in experiences])
-        experience_embedding = self.embedding_service.get_embedding(exp_text) if exp_text else None
+        exp_text = " ".join([f"{e.get('title') or ''} {e.get('description') or ''}" for e in experiences])
+        experience_embedding = self.embedding_service.get_embedding(exp_text) if exp_text.strip() else None
 
         # Update in DB
         self.cv_repo.update_cv_embeddings(
