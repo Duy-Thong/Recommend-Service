@@ -126,6 +126,22 @@ class JobRepository:
             cursor.execute(query)
             return cursor.fetchall()
 
+    def get_all_jobs(self) -> List[dict]:
+        """Get all jobs (regardless of status) for similar jobs calculation"""
+        query = """
+            SELECT
+                j.id,
+                j.title,
+                j."titleEmbedding",
+                j."skillsEmbedding",
+                j."requirementEmbedding",
+                j."contentHash"
+            FROM jobs j
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(query)
+            return cursor.fetchall()
+
     def get_job_skills(self, job_id: str) -> List[dict]:
         """Get skills for a job"""
         query = """
@@ -245,3 +261,74 @@ class RecommendationRepository:
         with self.db.get_cursor() as cursor:
             cursor.execute(query, (cv_id, limit))
             return cursor.fetchall()
+
+
+class SimilarJobRepository:
+    def __init__(self, db: DatabaseConnection):
+        self.db = db
+
+    def upsert_similar_jobs(self, job_id: str, similar_jobs: List[dict]) -> None:
+        """Upsert similar jobs for a given job"""
+        # First, delete old similar jobs for this job
+        delete_query = """
+            DELETE FROM similar_jobs
+            WHERE "jobId" = %s
+        """
+
+        # Then insert new similar jobs
+        insert_query = """
+            INSERT INTO similar_jobs ("id", "jobId", "similarJobId", "similarity", "createdAt", "updatedAt")
+            VALUES (gen_random_uuid(), %s, %s, %s, NOW(), NOW())
+            ON CONFLICT ("jobId", "similarJobId")
+            DO UPDATE SET similarity = EXCLUDED.similarity, "updatedAt" = NOW()
+        """
+
+        with self.db.get_cursor() as cursor:
+            cursor.execute(delete_query, (job_id,))
+
+            for similar_job in similar_jobs:
+                cursor.execute(
+                    insert_query,
+                    (job_id, similar_job["similar_job_id"], similar_job["similarity"])
+                )
+
+            logger.info(
+                f"Upserted {len(similar_jobs)} similar jobs for Job: {job_id}"
+            )
+
+    def get_similar_jobs(self, job_id: str, limit: int = 10) -> List[dict]:
+        """Get similar jobs for a given job"""
+        query = """
+            SELECT
+                sj."similarJobId",
+                sj.similarity,
+                j.title,
+                j.description,
+                j.location,
+                j."experienceLevel",
+                j.type
+            FROM similar_jobs sj
+            JOIN jobs j ON sj."similarJobId" = j.id
+            WHERE sj."jobId" = %s
+                AND j.status = 'ACTIVE'
+                AND (j."expiresAt" IS NULL OR j."expiresAt" > NOW())
+            ORDER BY sj.similarity DESC
+            LIMIT %s
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(query, (job_id, limit))
+            return cursor.fetchall()
+
+    def batch_upsert_similar_jobs(self, all_similar_jobs: dict) -> None:
+        """Batch upsert similar jobs for multiple jobs
+
+        Args:
+            all_similar_jobs: Dict mapping job_id to list of similar jobs
+        """
+        total_inserted = 0
+        for job_id, similar_jobs in all_similar_jobs.items():
+            if similar_jobs:
+                self.upsert_similar_jobs(job_id, similar_jobs)
+                total_inserted += len(similar_jobs)
+
+        logger.info(f"Batch upserted {total_inserted} similar job relationships for {len(all_similar_jobs)} jobs")
