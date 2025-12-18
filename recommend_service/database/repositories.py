@@ -59,7 +59,7 @@ class CVRepository:
         title_embedding: List[float],
         skills_embedding: Optional[List[float]],
         experience_embedding: Optional[List[float]],
-        content_hash: str
+        content_hash: str,
     ) -> None:
         """Update embeddings for a CV"""
         query = """
@@ -73,24 +73,32 @@ class CVRepository:
             WHERE id = %s
         """
         with self.db.get_cursor() as cursor:
-            cursor.execute(query, (
-                json.dumps(title_embedding),
-                json.dumps(skills_embedding) if skills_embedding else None,
-                json.dumps(experience_embedding) if experience_embedding else None,
-                content_hash,
-                datetime.utcnow(),
-                cv_id
-            ))
+            cursor.execute(
+                query,
+                (
+                    json.dumps(title_embedding),
+                    json.dumps(skills_embedding) if skills_embedding else None,
+                    json.dumps(experience_embedding) if experience_embedding else None,
+                    content_hash,
+                    datetime.utcnow(),
+                    cv_id,
+                ),
+            )
             logger.info(f"Updated embeddings for CV: {cv_id}")
 
     @staticmethod
-    def compute_content_hash(cv: dict, skills: List[dict], experiences: List[dict]) -> str:
+    def compute_content_hash(
+        cv: dict, skills: List[dict], experiences: List[dict]
+    ) -> str:
         """Compute hash of CV content to detect changes (only fields used for embedding)"""
         content = {
             "title": cv.get("title") or "",
             "currentPosition": cv.get("currentPosition") or "",
             "skills": [(s.get("skillName") or "") for s in skills],
-            "experiences": [(e.get("title") or "") + (e.get("description") or "") for e in experiences]
+            "experiences": [
+                (e.get("title") or "") + (e.get("description") or "")
+                for e in experiences
+            ],
         }
         content_str = json.dumps(content, sort_keys=True)
         return hashlib.md5(content_str.encode()).hexdigest()
@@ -146,7 +154,7 @@ class JobRepository:
         title_embedding: List[float],
         skills_embedding: Optional[List[float]],
         requirement_embedding: Optional[List[float]],
-        content_hash: str
+        content_hash: str,
     ) -> None:
         """Update embeddings for a job"""
         query = """
@@ -160,23 +168,35 @@ class JobRepository:
             WHERE id = %s
         """
         with self.db.get_cursor() as cursor:
-            cursor.execute(query, (
-                json.dumps(title_embedding),
-                json.dumps(skills_embedding) if skills_embedding else None,
-                json.dumps(requirement_embedding) if requirement_embedding else None,
-                content_hash,
-                datetime.utcnow(),
-                job_id
-            ))
+            cursor.execute(
+                query,
+                (
+                    json.dumps(title_embedding),
+                    json.dumps(skills_embedding) if skills_embedding else None,
+                    (
+                        json.dumps(requirement_embedding)
+                        if requirement_embedding
+                        else None
+                    ),
+                    content_hash,
+                    datetime.utcnow(),
+                    job_id,
+                ),
+            )
             logger.info(f"Updated embeddings for Job: {job_id}")
 
     @staticmethod
-    def compute_content_hash(job: dict, skills: List[dict], requirements: List[dict]) -> str:
+    def compute_content_hash(
+        job: dict, skills: List[dict], requirements: List[dict]
+    ) -> str:
         """Compute hash of job content to detect changes (only fields used for embedding)"""
         content = {
             "title": job.get("title") or "",
             "skills": [(s.get("skillName") or "") for s in skills],
-            "requirements": [(r.get("title") or "") + (r.get("description") or "") for r in requirements]
+            "requirements": [
+                (r.get("title") or "") + (r.get("description") or "")
+                for r in requirements
+            ],
         }
         content_str = json.dumps(content, sort_keys=True)
         return hashlib.md5(content_str.encode()).hexdigest()
@@ -208,7 +228,9 @@ class RecommendationRepository:
             for rec in recommendations:
                 cursor.execute(insert_query, (cv_id, rec["job_id"], rec["similarity"]))
 
-            logger.info(f"Upserted {len(recommendations)} recommendations for CV: {cv_id}")
+            logger.info(
+                f"Upserted {len(recommendations)} recommendations for CV: {cv_id}"
+            )
 
     def get_recommendations_for_cv(self, cv_id: str, limit: int = 20) -> List[dict]:
         """Get job recommendations for a CV"""
