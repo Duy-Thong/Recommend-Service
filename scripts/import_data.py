@@ -1,0 +1,489 @@
+"""
+Script to import CSV data into the database.
+Maps CSV columns to database schema and creates nested records (skills, experiences, etc.)
+"""
+
+import csv
+import logging
+import sys
+import uuid
+import re
+from datetime import datetime
+from pathlib import Path
+from typing import List, Dict, Optional, Tuple
+
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from recommend_service.database.connection import DatabaseConnection
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+
+# ============================================
+# ENUM MAPPINGS
+# ============================================
+
+GENDER_MAP = {
+    "nam": "MALE",
+    "nữ": "FEMALE",
+    "khác": "OTHER",
+    "male": "MALE",
+    "female": "FEMALE",
+    "other": "OTHER",
+}
+
+EXPERIENCE_LEVEL_MAP = {
+    "thực tập sinh": "INTERN",
+    "intern": "INTERN",
+    "fresher": "FRESHER",
+    "nhân viên": "JUNIOR",
+    "junior": "JUNIOR",
+    "middle": "MIDDLE",
+    "senior": "SENIOR",
+    "trưởng nhóm": "LEAD",
+    "lead": "LEAD",
+    "quản lý": "MANAGER",
+    "manager": "MANAGER",
+    "không yêu cầu kinh nghiệm": "FRESHER",
+    "chưa có kinh nghiệm": "FRESHER",
+    "dưới 1 năm": "FRESHER",
+    "1-3 năm": "JUNIOR",
+    "3-5 năm": "MIDDLE",
+    "5-10 năm": "SENIOR",
+    "trên 10 năm": "LEAD",
+}
+
+JOB_TYPE_MAP = {
+    "full time": "FULL_TIME",
+    "full-time": "FULL_TIME",
+    "toàn thời gian": "FULL_TIME",
+    "part time": "PART_TIME",
+    "part-time": "PART_TIME",
+    "bán thời gian": "PART_TIME",
+    "contract": "CONTRACT",
+    "hợp đồng": "CONTRACT",
+    "internship": "INTERNSHIP",
+    "thực tập": "INTERNSHIP",
+    "freelance": "FREELANCE",
+}
+
+COMPANY_SIZE_MAP = {
+    "1-9": "STARTUP",
+    "10-24": "SMALL",
+    "25-99": "SMALL",
+    "100-499": "MEDIUM",
+    "500-999": "LARGE",
+    "1000+": "ENTERPRISE",
+    "trên 1000": "ENTERPRISE",
+}
+
+SKILL_LEVEL_MAP = {
+    "beginner": "BEGINNER",
+    "intermediate": "INTERMEDIATE",
+    "advanced": "ADVANCED",
+    "expert": "EXPERT",
+}
+
+
+def parse_salary(salary_str: str) -> Tuple[Optional[int], Optional[int], bool]:
+    """Parse salary string to min, max amounts and negotiable flag"""
+    if not salary_str or salary_str.lower() in ["thỏa thuận", "negotiable", ""]:
+        return None, None, True
+
+    # Remove commas and spaces
+    salary_str = salary_str.replace(",", "").replace(" ", "")
+
+    # Try to find numbers
+    numbers = re.findall(r'\d+', salary_str)
+
+    if len(numbers) >= 2:
+        return int(numbers[0]), int(numbers[1]), False
+    elif len(numbers) == 1:
+        return int(numbers[0]), int(numbers[0]), False
+
+    return None, None, True
+
+
+def map_enum(value: str, mapping: dict, default: Optional[str] = None) -> Optional[str]:
+    """Map a string value to an enum using the provided mapping"""
+    if not value:
+        return default
+    return mapping.get(value.lower().strip(), default)
+
+
+def map_company_size(size_str: str) -> Optional[str]:
+    """Map company size string to enum"""
+    if not size_str:
+        return None
+
+    for key, value in COMPANY_SIZE_MAP.items():
+        if key in size_str:
+            return value
+
+    return None
+
+
+def split_text_to_items(text: str, delimiters: List[str] = None) -> List[str]:
+    """Split text into items using various delimiters"""
+    if not text or text.strip() == "":
+        return []
+
+    if delimiters is None:
+        delimiters = ["\n", ";", ",", "•", "-", "●"]
+
+    # Try each delimiter
+    items = [text]
+    for delim in delimiters:
+        new_items = []
+        for item in items:
+            new_items.extend(item.split(delim))
+        items = new_items
+
+    # Clean and filter
+    items = [item.strip() for item in items if item.strip() and len(item.strip()) > 2]
+    return items
+
+
+class DataImporter:
+    def __init__(self):
+        self.db = DatabaseConnection()
+        self.company_cache = {}  # name -> id
+        self.user_cache = {}  # (name, userid) -> id
+
+    def get_or_create_company(self, cursor, name: str, description: str = None,
+                               size: str = None, address: str = None) -> str:
+        """Get existing company or create new one"""
+        if name in self.company_cache:
+            return self.company_cache[name]
+
+        # Check if exists
+        cursor.execute('SELECT id FROM companies WHERE name = %s', (name,))
+        result = cursor.fetchone()
+
+        if result:
+            self.company_cache[name] = result["id"]
+            return result["id"]
+
+        # Create new
+        company_id = str(uuid.uuid4())
+        company_size = map_company_size(size)
+
+        cursor.execute('''
+            INSERT INTO companies (id, name, description, "companySize", address, status, "createdAt", "updatedAt")
+            VALUES (%s, %s, %s, %s, %s, 'ACTIVE', NOW(), NOW())
+        ''', (company_id, name, description, company_size, address))
+
+        self.company_cache[name] = company_id
+        logger.info(f"Created company: {name}")
+        return company_id
+
+    def get_or_create_user(self, cursor, name: str, userid: str, gender: str = None) -> str:
+        """Get existing user or create new one"""
+        cache_key = (name, userid)
+        if cache_key in self.user_cache:
+            return self.user_cache[cache_key]
+
+        # Generate email from userid
+        email = f"user_{userid}@imported.local"
+
+        # Check if exists
+        cursor.execute('SELECT id FROM users WHERE email = %s', (email,))
+        result = cursor.fetchone()
+
+        if result:
+            self.user_cache[cache_key] = result["id"]
+            return result["id"]
+
+        # Create new
+        user_id = str(uuid.uuid4())
+        gender_enum = map_enum(gender, GENDER_MAP)
+
+        cursor.execute('''
+            INSERT INTO users (id, email, "passwordHash", "fullName", gender, role, status, "createdAt", "updatedAt")
+            VALUES (%s, %s, %s, %s, %s, 'CANDIDATE', 'ACTIVE', NOW(), NOW())
+        ''', (user_id, email, "$2b$10$4OTxGbe.sGx1OlQfJtfIaubeekNXfU7rMMe3kB4G5l927V2SA6CT6", name, gender_enum))
+
+        self.user_cache[cache_key] = user_id
+        logger.info(f"Created user: {name}")
+        return user_id
+
+    def import_companies(self, csv_path: str, limit: int = None):
+        """Import companies from CSV"""
+        logger.info(f"Importing companies from {csv_path}")
+
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        if limit:
+            rows = rows[:limit]
+
+        imported = 0
+        skipped = 0
+
+        with self.db.get_cursor() as cursor:
+            for row in rows:
+                try:
+                    self._import_company_row(cursor, row)
+                    imported += 1
+                except Exception as e:
+                    logger.error(f"Error importing company: {e}")
+                    skipped += 1
+
+                if imported % 100 == 0 and imported > 0:
+                    logger.info(f"Imported {imported} companies...")
+
+        logger.info(f"Companies import complete: {imported} imported, {skipped} skipped")
+
+    def _import_company_row(self, cursor, row: dict):
+        """Import a single company row"""
+        company_name = row.get("Name Company", "").strip()
+        if not company_name:
+            return
+
+        # Use get_or_create to avoid duplicates
+        self.get_or_create_company(
+            cursor,
+            name=company_name,
+            description=row.get("Company Overview"),
+            size=row.get("Company Size"),
+            address=row.get("Company Address")
+        )
+
+    def import_jobs(self, csv_path: str, limit: int = None):
+        """Import jobs from CSV"""
+        logger.info(f"Importing jobs from {csv_path}")
+
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        if limit:
+            rows = rows[:limit]
+
+        imported = 0
+        skipped = 0
+
+        with self.db.get_cursor() as cursor:
+            for row in rows:
+                try:
+                    self._import_job_row(cursor, row)
+                    imported += 1
+                except Exception as e:
+                    logger.error(f"Error importing job: {e}")
+                    skipped += 1
+
+                if imported % 100 == 0:
+                    logger.info(f"Imported {imported} jobs...")
+
+        logger.info(f"Jobs import complete: {imported} imported, {skipped} skipped")
+
+    def _import_job_row(self, cursor, row: dict):
+        """Import a single job row"""
+        job_id = str(uuid.uuid4())
+
+        # Get or create company
+        company_name = row.get("Name Company", "Unknown Company")
+        company_id = self.get_or_create_company(
+            cursor,
+            name=company_name,
+            description=row.get("Company Overview"),
+            size=row.get("Company Size"),
+            address=row.get("Company Address")
+        )
+
+        # Parse salary
+        min_salary, max_salary, is_negotiable = parse_salary(row.get("Salary", ""))
+
+        # Map enums
+        experience_level = map_enum(row.get("Career Level") or row.get("Years of Experience"),
+                                     EXPERIENCE_LEVEL_MAP)
+        job_type = map_enum(row.get("Job Type"), JOB_TYPE_MAP, "FULL_TIME")
+
+        # Insert job (embedding sẽ được tạo sau)
+        cursor.execute('''
+            INSERT INTO jobs (
+                id, "companyId", title, description, location, industry,
+                "experienceLevel", type, status, "createdAt", "updatedAt"
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'ACTIVE', NOW(), NOW())
+        ''', (
+            job_id,
+            company_id,
+            row.get("Job Title", "Untitled"),
+            row.get("Job Description"),
+            row.get("Job Address"),
+            row.get("Industry"),
+            experience_level,
+            job_type
+        ))
+
+        # Insert salary
+        if min_salary or max_salary or is_negotiable:
+            cursor.execute('''
+                INSERT INTO salaries (id, "jobId", "minAmount", "maxAmount", "isNegotiable", "createdAt", "updatedAt")
+                VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
+            ''', (str(uuid.uuid4()), job_id, min_salary, max_salary, is_negotiable))
+
+        # Insert requirements
+        requirements = split_text_to_items(row.get("Job Requirements", ""))
+        for req in requirements[:10]:  # Limit to 10
+            cursor.execute('''
+                INSERT INTO job_requirements (id, "jobId", title, "createdAt", "updatedAt")
+                VALUES (%s, %s, %s, NOW(), NOW())
+            ''', (str(uuid.uuid4()), job_id, req[:500]))
+
+        # Insert benefits
+        benefits = split_text_to_items(row.get("Benefits", ""))
+        for benefit in benefits[:10]:  # Limit to 10
+            cursor.execute('''
+                INSERT INTO job_benefits (id, "jobId", title, "createdAt", "updatedAt")
+                VALUES (%s, %s, %s, NOW(), NOW())
+            ''', (str(uuid.uuid4()), job_id, benefit[:500]))
+
+    def import_cvs(self, csv_path: str, limit: int = None):
+        """Import CVs from CSV"""
+        logger.info(f"Importing CVs from {csv_path}")
+
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        if limit:
+            rows = rows[:limit]
+
+        imported = 0
+        skipped = 0
+
+        with self.db.get_cursor() as cursor:
+            for row in rows:
+                try:
+                    self._import_cv_row(cursor, row)
+                    imported += 1
+                except Exception as e:
+                    logger.error(f"Error importing CV: {e}")
+                    skipped += 1
+
+                if imported % 100 == 0:
+                    logger.info(f"Imported {imported} CVs...")
+
+        logger.info(f"CVs import complete: {imported} imported, {skipped} skipped")
+
+    def _import_cv_row(self, cursor, row: dict):
+        """Import a single CV row"""
+        cv_id = str(uuid.uuid4())
+
+        # Get or create user
+        user_name = row.get("user_name", "Unknown")
+        userid = row.get("userid", str(uuid.uuid4()))
+        gender = row.get("gender")
+
+        user_id = self.get_or_create_user(cursor, user_name, userid, gender)
+
+        # CV title from desired_job_translated
+        cv_title = row.get("desired_job_translated", "CV của " + user_name)
+
+        # Build summary from available info
+        summary_parts = []
+        if row.get("industry"):
+            summary_parts.append(f"Ngành: {row['industry']}")
+        if row.get("workplace_desired"):
+            summary_parts.append(f"Nơi làm việc: {row['workplace_desired']}")
+        if row.get("desired_salary"):
+            summary_parts.append(f"Mức lương mong muốn: {row['desired_salary']}")
+        summary = ". ".join(summary_parts) if summary_parts else None
+
+        # Map experience level
+        work_exp = row.get("work_experience", "")
+        experience_text = map_enum(work_exp, EXPERIENCE_LEVEL_MAP)
+
+        # Insert CV
+        cursor.execute('''
+            INSERT INTO cvs (
+                id, "userId", title, "isMain", "fullName", "currentPosition",
+                summary, "isOpenForJob", "createdAt", "updatedAt"
+            ) VALUES (%s, %s, %s, true, %s, %s, %s, true, NOW(), NOW())
+        ''', (
+            cv_id,
+            user_id,
+            cv_title[:255],
+            user_name,
+            cv_title[:255],
+            summary
+        ))
+
+        # Insert skills
+        skills_text = row.get("Skills", "")
+        skills = split_text_to_items(skills_text)
+        for skill in skills[:20]:  # Limit to 20
+            cursor.execute('''
+                INSERT INTO cv_skills (id, "cvId", "skillName", level, "createdAt", "updatedAt")
+                VALUES (%s, %s, %s, 'INTERMEDIATE', NOW(), NOW())
+            ''', (str(uuid.uuid4()), cv_id, skill[:100]))
+
+        # Insert work experience
+        exp_text = row.get("Experience", "")
+        experiences = split_text_to_items(exp_text)
+
+        # Also add work_experience as a record
+        if work_exp and work_exp.strip():
+            experiences.insert(0, work_exp)
+
+        for exp in experiences[:10]:  # Limit to 10
+            cursor.execute('''
+                INSERT INTO work_experiences (id, "cvId", title, company, "createdAt", "updatedAt")
+                VALUES (%s, %s, %s, %s, NOW(), NOW())
+            ''', (str(uuid.uuid4()), cv_id, exp[:255], ""))
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Import CSV data to database")
+    parser.add_argument("--companies", type=str, help="Path to companies CSV file")
+    parser.add_argument("--jobs", type=str, help="Path to jobs CSV file")
+    parser.add_argument("--cvs", type=str, help="Path to CVs CSV file")
+    parser.add_argument("--limit", type=int, help="Limit number of records to import")
+    parser.add_argument("--all", action="store_true", help="Import all default files (companies -> jobs -> cvs)")
+
+    args = parser.parse_args()
+
+    importer = DataImporter()
+
+    # Test connection
+    if not importer.db.test_connection():
+        logger.error("Cannot connect to database")
+        sys.exit(1)
+
+    data_dir = Path(__file__).parent.parent / "data"
+
+    if args.all:
+        # Import in order: companies → jobs → cvs
+        companies_path = data_dir / "company_data.csv"
+        jobs_path = data_dir / "job_data.csv"
+        cvs_path = data_dir / "candidates_dataset.csv"
+
+        if companies_path.exists():
+            importer.import_companies(str(companies_path), args.limit)
+        if jobs_path.exists():
+            importer.import_jobs(str(jobs_path), args.limit)
+        if cvs_path.exists():
+            importer.import_cvs(str(cvs_path), args.limit)
+    else:
+        if args.companies:
+            importer.import_companies(args.companies, args.limit)
+        if args.jobs:
+            importer.import_jobs(args.jobs, args.limit)
+        if args.cvs:
+            importer.import_cvs(args.cvs, args.limit)
+
+    if not args.companies and not args.jobs and not args.cvs and not args.all:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
