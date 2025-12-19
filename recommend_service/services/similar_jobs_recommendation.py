@@ -77,9 +77,9 @@ class SimilarJobsRecommendationService:
         return stats
 
     def _load_and_embed_jobs(self) -> List[JobData]:
-        """Load jobs from DB and generate embeddings if needed"""
+        """Load active jobs from DB and generate embeddings if needed"""
         jobs_data = []
-        raw_jobs = self.job_repo.get_all_jobs()  # Get ALL jobs, not just active ones
+        raw_jobs = self.job_repo.get_active_jobs()  # Get only ACTIVE jobs (same as RecommendationService)
 
         for raw_job in raw_jobs:
             job_id = raw_job["id"]
@@ -150,16 +150,34 @@ class SimilarJobsRecommendationService:
 
         logger.info(f"Calculating similar jobs for {len(jobs_with_embeddings)} jobs")
 
-        # Build shared FAISS index
-        logger.info("Building shared FAISS index from jobs")
-        self.similar_jobs_service.build_index(jobs_with_embeddings)
-
-        # Save the shared index for reuse by RecommendationService
+        # Try to load existing shared FAISS index first
+        logger.info("Attempting to load shared FAISS index from previous run")
         try:
-            self.similar_jobs_service.save_index()
-            logger.info("Saved shared FAISS index successfully")
+            self.similar_jobs_service.load_index()
+
+            if self.similar_jobs_service.index is not None:
+                logger.info("Successfully loaded existing shared FAISS index")
+            else:
+                # Index file doesn't exist yet, build it
+                logger.info("No existing index found, building shared FAISS index from jobs")
+                self.similar_jobs_service.build_index(jobs_with_embeddings)
+
+                # Save the shared index for future reuse
+                try:
+                    self.similar_jobs_service.save_index()
+                    logger.info("Saved shared FAISS index successfully")
+                except Exception as e:
+                    logger.warning(f"Failed to save shared FAISS index: {e}")
         except Exception as e:
-            logger.warning(f"Failed to save shared FAISS index: {e}")
+            logger.warning(f"Failed to load existing index: {e}, building new one")
+            self.similar_jobs_service.build_index(jobs_with_embeddings)
+
+            # Save the shared index for future reuse
+            try:
+                self.similar_jobs_service.save_index()
+                logger.info("Saved shared FAISS index successfully")
+            except Exception as e:
+                logger.warning(f"Failed to save shared FAISS index: {e}")
 
         # Calculate similar jobs for all jobs
         all_similar_jobs = self.similar_jobs_service.batch_calculate_similar_jobs(

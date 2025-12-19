@@ -324,8 +324,7 @@ class SimilarityService:
 
             results.append({
                 "job_id": self.job_ids[idx],
-                "similarity": float(dist),  # Already cosine similarity due to normalization
-                "job_title": self.job_titles[idx]
+                "similarity": float(dist)  # Already cosine similarity due to normalization
             })
 
         return results
@@ -353,8 +352,7 @@ class SimilarityService:
             sim = self.calculate_similarity(cv, job)
             similarities.append({
                 "job_id": job.id,
-                "similarity": sim,
-                "job_title": job.title
+                "similarity": sim
             })
 
         # Sort by similarity descending
@@ -461,8 +459,7 @@ class SimilarityService:
 
                 recommendations.append({
                     "job_id": self.job_ids[idx],
-                    "similarity": float(dist),
-                    "job_title": self.job_titles[idx]
+                    "similarity": float(dist)
                 })
 
             results[cv_id] = recommendations

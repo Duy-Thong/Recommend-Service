@@ -296,8 +296,7 @@ class SimilarJobsService:
             similarities.append({
                 "job_id": target_job.id,
                 "similar_job_id": job_id,
-                "similarity": float(dist),  # Already cosine similarity due to normalization
-                "job_title": self.job_titles[idx]
+                "similarity": float(dist)  # Already cosine similarity due to normalization
             })
 
             if len(similarities) >= top_k:
@@ -336,8 +335,7 @@ class SimilarJobsService:
                 similarities.append({
                     "job_id": target_job.id,
                     "similar_job_id": job.id,
-                    "similarity": sim,
-                    "job_title": job.title
+                    "similarity": sim
                 })
 
         # Sort by similarity descending
@@ -445,8 +443,7 @@ class SimilarJobsService:
                 similarities.append({
                     "job_id": job_id,
                     "similar_job_id": similar_job_id,
-                    "similarity": float(dist),
-                    "job_title": self.job_titles[idx]
+                    "similarity": float(dist)
                 })
 
                 if len(similarities) >= top_k:
