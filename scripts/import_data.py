@@ -577,9 +577,9 @@ class DataImporter:
             reader = csv.DictReader(f)
             rows = list(reader)
 
-        # Default limit for CVs is 5000 (random sample)
+        # Default limit for CVs is 2000 (random sample)
         if limit is None:
-            limit = 5000
+            limit = 2000
 
         if limit and len(rows) > limit:
             if random_sample:
