@@ -16,7 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 class RecommendationService:
-    def __init__(self, use_faiss: bool = True, shared_index_path: str = "./faiss_data/shared_jobs.faiss"):
+    def __init__(
+        self,
+        use_faiss: bool = True,
+        shared_index_path: str = "./faiss_data/shared_jobs.faiss"
+    ):
         """
         Initialize recommendation service.
 
@@ -40,8 +44,18 @@ class RecommendationService:
             nprobe=10
         )
 
+        # Cascade filtering settings from config
+        self.use_cascade = settings.use_cascade_filtering
+        self.cascade_k1 = settings.cascade_k1
+        self.cascade_k2 = settings.cascade_k2
+        self.cascade_k3 = settings.cascade_k3
+
         self.top_k = settings.top_k_jobs
         self.batch_size = settings.batch_size
+
+        logger.info(f"Cascade filtering: {'ENABLED' if self.use_cascade else 'DISABLED'}")
+        if self.use_cascade:
+            logger.info(f"Cascade K values: K1={self.cascade_k1}, K2={self.cascade_k2}, K3={self.cascade_k3}")
 
     def run(self) -> dict:
         """
@@ -257,18 +271,34 @@ class RecommendationService:
                 except Exception as save_error:
                     logger.warning(f"Failed to save FAISS index: {save_error}")
 
+        # Build jobs_dict for cascade filtering
+        jobs_dict = {job.id: job for job in jobs_with_embeddings}
+
         # Process CVs
         for cv in cvs:
             if not cv.title_embedding:
                 logger.warning(f"CV {cv.id} has no embedding, skipping")
                 continue
 
-            # Find top K similar jobs (uses FAISS if available)
-            top_jobs = self.similarity_service.find_top_k_jobs(
-                cv,
-                jobs_with_embeddings,
-                self.top_k
-            )
+            # Choose filtering method
+            if self.use_cascade:
+                # Use cascade filtering (3 rounds: title -> experience -> skills)
+                logger.debug(f"Using cascade filtering for CV {cv.id}")
+                top_jobs = self.similarity_service.find_top_k_jobs_cascade(
+                    cv,
+                    jobs_dict,
+                    k1=self.cascade_k1,
+                    k2=self.cascade_k2,
+                    k3=self.cascade_k3
+                )
+            else:
+                # Use original method (title only)
+                logger.debug(f"Using original filtering for CV {cv.id}")
+                top_jobs = self.similarity_service.find_top_k_jobs(
+                    cv,
+                    jobs_with_embeddings,
+                    self.top_k
+                )
 
             # Save recommendations
             if top_jobs:

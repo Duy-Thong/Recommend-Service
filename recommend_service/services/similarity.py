@@ -292,6 +292,128 @@ class SimilarityService:
 
         return self._find_top_k_jobs_legacy(cv, jobs, top_k)
 
+    def find_top_k_jobs_cascade(
+        self,
+        cv: CVData,
+        jobs_dict: Dict[str, JobData],
+        k1: int = 1000,
+        k2: int = 100,
+        k3: int = 10
+    ) -> List[dict]:
+        """
+        Find top K jobs using 3-round cascade filtering:
+        Round 1 (FAISS): Title similarity -> Top K1 jobs (default 1000)
+        Round 2 (Loop):  Experience-Requirements similarity -> Top K2 jobs (default 100)
+        Round 3 (Loop):  Skills similarity -> Top K3 jobs (default 10)
+
+        Args:
+            cv: CV data with embeddings
+            jobs_dict: Dictionary mapping job_id to JobData (for fast lookup)
+            k1: Number of jobs to select in round 1 (title filtering)
+            k2: Number of jobs to select in round 2 (experience filtering)
+            k3: Number of jobs to select in round 3 (skills filtering)
+
+        Returns:
+            List of dicts with job_id and similarity score
+        """
+        if self.index is None or not self.job_ids:
+            logger.error("FAISS index not built. Cannot perform cascade filtering.")
+            return []
+
+        if not cv.title_embedding:
+            logger.warning(f"CV has no title embedding, cannot perform cascade filtering")
+            return []
+
+        # ============================================
+        # Round 1: FAISS search by Title
+        # ============================================
+        logger.debug(f"Round 1: Searching top {k1} jobs by title similarity")
+
+        query_vec = np.array(cv.title_embedding, dtype=np.float32).reshape(1, -1)
+        norm = np.linalg.norm(query_vec)
+        if norm > 0:
+            query_vec = query_vec / norm
+
+        k1_actual = min(k1, len(self.job_ids))
+        distances, indices = self.index.search(query_vec, k1_actual)
+
+        top_k1_ids = [self.job_ids[idx] for idx in indices[0] if idx != -1]
+        logger.debug(f"Round 1 complete: Found {len(top_k1_ids)} jobs")
+
+        if not top_k1_ids:
+            logger.warning("Round 1 returned no jobs")
+            return []
+
+        # ============================================
+        # Round 2: Experience-Requirements filtering
+        # ============================================
+        logger.debug(f"Round 2: Filtering {len(top_k1_ids)} -> {k2} jobs by experience-requirements")
+
+        exp_scores = []
+        for job_id in top_k1_ids:
+            job = jobs_dict.get(job_id)
+            if not job:
+                logger.warning(f"Job {job_id} not found in jobs_dict")
+                continue
+
+            # Calculate experience-requirements similarity
+            if cv.experience_embedding and job.requirement_embedding:
+                sim = self.cosine_similarity(cv.experience_embedding, job.requirement_embedding)
+            elif not cv.experience_embedding:
+                # CV has no experience (e.g., fresher) -> lower score but not eliminate
+                sim = 0.3
+            elif not job.requirement_embedding:
+                # Job has no specific requirements -> neutral score
+                sim = 0.5
+            else:
+                sim = 0.0
+
+            exp_scores.append((job_id, sim))
+
+        # Sort by experience-requirements similarity
+        exp_scores.sort(key=lambda x: x[1], reverse=True)
+        top_k2_ids = [job_id for job_id, _ in exp_scores[:k2]]
+        logger.debug(f"Round 2 complete: Selected {len(top_k2_ids)} jobs")
+
+        if not top_k2_ids:
+            logger.warning("Round 2 returned no jobs")
+            return []
+
+        # ============================================
+        # Round 3: Skills-Skills filtering
+        # ============================================
+        logger.debug(f"Round 3: Filtering {len(top_k2_ids)} -> {k3} jobs by skills")
+
+        skill_scores = []
+        for job_id in top_k2_ids:
+            job = jobs_dict.get(job_id)
+            if not job:
+                continue
+
+            # Calculate skills similarity
+            if cv.skills_embedding and job.skills_embedding:
+                sim = self.cosine_similarity(cv.skills_embedding, job.skills_embedding)
+            elif not cv.skills_embedding:
+                # CV has no skills listed -> lower score
+                sim = 0.3
+            elif not job.skills_embedding:
+                # Job has no skills requirement -> neutral score
+                sim = 0.5
+            else:
+                sim = 0.0
+
+            skill_scores.append({
+                "job_id": job_id,
+                "similarity": sim
+            })
+
+        # Sort by skills similarity
+        skill_scores.sort(key=lambda x: x["similarity"], reverse=True)
+        top_k3 = skill_scores[:k3]
+        logger.debug(f"Round 3 complete: Final {len(top_k3)} jobs selected")
+
+        return top_k3
+
     def _find_top_k_jobs_faiss(self, cv: CVData, top_k: int) -> List[dict]:
         """
         Find top K jobs using FAISS index (fast method).

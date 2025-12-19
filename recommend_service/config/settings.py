@@ -22,6 +22,12 @@ class Settings:
     # Recommendation settings
     top_k_jobs: int = int(os.getenv("TOP_K_JOBS", "20"))
 
+    # Cascade filtering settings
+    use_cascade_filtering: bool = os.getenv("USE_CASCADE_FILTERING", "true").lower() == "true"
+    cascade_k1: int = int(os.getenv("CASCADE_K1", "1000"))  # Round 1: Title filtering
+    cascade_k2: int = int(os.getenv("CASCADE_K2", "100"))   # Round 2: Experience filtering
+    cascade_k3: int = int(os.getenv("CASCADE_K3", "10"))    # Round 3: Skills filtering
+
     # Scheduler settings (in hours)
     schedule_interval_hours: int = int(os.getenv("SCHEDULE_INTERVAL_HOURS", "12"))
 

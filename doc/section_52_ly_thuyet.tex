@@ -1,0 +1,85 @@
+\section{Cơ sở lý thuyết}
+\label{sec:ly-thuyet}
+
+\subsection{Tổng quan về hệ thống gợi ý}
+\label{subsec:tong-quan-he-thong-goi-y}
+
+Hệ thống gợi ý được phân thành ba nhóm chính: lọc cộng tác dựa trên hành vi người dùng tương tự, lọc dựa trên nội dung phân tích đặc điểm của các mục, và phương pháp lai kết hợp cả hai. Đối với bài toán gợi ý việc làm, phương pháp lọc dựa trên nội dung được lựa chọn vì dữ liệu CV và mô tả công việc chứa nhiều thông tin ngữ nghĩa có thể khai thác, đồng thời giảm thiểu vấn đề khởi động lạnh với người dùng mới.
+
+\subsection{Nhúng văn bản và học biểu diễn ngữ nghĩa}
+\label{subsec:embedding}
+
+\subsubsection{Mô hình BERT}
+
+BERT là mô hình ngôn ngữ được giới thiệu bởi Devlin và cộng sự vào năm 2018 \cite{devlin2018bert}, đánh dấu bước đột phá trong xử lý ngôn ngữ tự nhiên. Mô hình này phù hợp cho các bài toán gợi ý dựa trên ngữ nghĩa nhờ bốn đặc điểm quan trọng.
+
+Thứ nhất, về mã hóa văn bản, BERT sử dụng phương pháp mã hóa cặp byte để chia văn bản thành các đơn vị con, cho phép xử lý được các từ ngoài từ điển và giảm kích thước bộ từ vựng. Phương pháp này giúp mô hình linh hoạt trong việc xử lý các từ mới hoặc từ hiếm gặp.
+
+Thứ hai, cơ chế tự chú ý cho phép mô hình nắm bắt ngữ cảnh hai chiều, học được mối quan hệ giữa các từ trong câu bất kể khoảng cách giữa chúng. Điểm chú ý được tính theo công thức:
+
+\begin{equation}
+\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\end{equation}
+
+trong đó $Q$, $K$, $V$ lần lượt là các ma trận truy vấn, khóa và giá trị, còn $d_k$ là chiều của vector khóa. Khác với các mô hình trước đó chỉ đọc văn bản theo một chiều, BERT xử lý văn bản theo cả hai chiều cùng lúc, cho phép nắm bắt ngữ cảnh đầy đủ của mỗi từ.
+
+Thứ ba, quá trình tiền huấn luyện BERT sử dụng tác vụ mô hình ngôn ngữ có che, trong đó khoảng 15\% số từ được che đi ngẫu nhiên và mô hình phải dự đoán từ bị che dựa trên ngữ cảnh xung quanh. Chiến lược này giúp mô hình học được biểu diễn ngữ nghĩa sâu của văn bản mà không cần dữ liệu được gán nhãn.
+
+Thứ tư, học chuyển giao cho phép tận dụng tri thức đã học từ tập dữ liệu lớn. Sau khi tiền huấn luyện trên lượng lớn văn bản không gán nhãn, mô hình có thể được tinh chỉnh cho các tác vụ cụ thể trong miền ứng dụng với lượng dữ liệu nhỏ hơn nhiều, giảm đáng kể chi phí huấn luyện.
+
+\subsubsection{PhoBERT cho tiếng Việt}
+
+PhoBERT là mô hình ngôn ngữ tiền huấn luyện đầu tiên dành riêng cho tiếng Việt, được phát triển bởi Nguyen và Nguyen vào năm 2020 \cite{nguyen2020phobert}. Mô hình được xây dựng trên kiến trúc RoBERTa và được huấn luyện trên khoảng 20GB văn bản tiếng Việt.
+
+Về đặc thù ngôn ngữ tiếng Việt, đây là ngôn ngữ đơn lập với từ ghép và ranh giới từ không rõ ràng, ví dụ như ``học sinh'' hay ``sinh viên'' là các từ ghép cần được nhận diện đúng. PhoBERT sử dụng công cụ VnCoreNLP để tách từ trước khi áp dụng mã hóa cặp byte, giúp mô hình hiểu đúng cấu trúc từ vựng tiếng Việt. Cách tiếp cận này khác với các mô hình đa ngôn ngữ thường xử lý tiếng Việt như các ngôn ngữ châu Âu.
+
+Về kết quả so sánh, PhoBERT đạt hiệu suất vượt trội so với các mô hình đa ngôn ngữ như mBERT và XLM-R trên các tác vụ xử lý ngôn ngữ tự nhiên tiếng Việt. Cụ thể, trên tác vụ gán nhãn từ loại PhoBERT đạt độ chính xác 96,7\% so với 95,4\% của mBERT; trên tác vụ nhận dạng thực thể đạt điểm F1 94,7\% so với 92,0\% của XLM-R \cite{nguyen2020phobert}. Sự vượt trội này nhờ PhoBERT được huấn luyện chuyên biệt trên dữ liệu tiếng Việt với bộ từ vựng và phương pháp tách từ phù hợp.
+
+Hệ thống sử dụng mô hình SimCSE phiên bản tiếng Việt xây dựng trên nền tảng PhoBERT \cite{gao2021simcse}. SimCSE là phương pháp học đối chiếu trong đó cùng một câu được đưa qua mô hình hai lần với các giá trị bỏ ngẫu nhiên khác nhau để tạo hai biểu diễn, với mục tiêu làm cho hai biểu diễn của cùng câu gần nhau và biểu diễn của các câu khác thì xa nhau. Phương pháp này tạo ra các vector nhúng câu có chất lượng cao cho tác vụ đo độ tương đồng ngữ nghĩa.
+
+\subsection{Lưu trữ và truy vấn vector}
+\label{subsec:luu-tru-vector}
+
+\subsubsection{Lựa chọn giữa cơ sở dữ liệu vector và cơ sở dữ liệu truyền thống}
+
+Sau khi có các vector nhúng từ mô hình ngôn ngữ, cần một cơ chế lưu trữ và truy vấn hiệu quả. Có hai lựa chọn chính: cơ sở dữ liệu vector chuyên dụng như Pinecone hay Milvus, hoặc kết hợp cơ sở dữ liệu quan hệ với thư viện tìm kiếm vector.
+
+Hệ thống lựa chọn phương án kết hợp PostgreSQL với thư viện FAISS vì hệ thống đang sử dụng PostgreSQL cho các nghiệp vụ khác nên việc tận dụng lại giúp giảm độ phức tạp vận hành và không cần triển khai thêm dịch vụ mới. FAISS là thư viện mã nguồn mở được tối ưu hóa cao và dễ tích hợp vào hệ thống hiện có.
+
+\subsubsection{Thư viện FAISS}
+
+FAISS là thư viện tìm kiếm tương tự được phát triển bởi Facebook AI Research \cite{johnson2019billion}, hỗ trợ tìm kiếm láng giềng gần đúng trên tập dữ liệu vector lớn. Thư viện cung cấp nhiều loại index khác nhau.
+
+Flat Index thực hiện tìm kiếm vét cạn, so sánh vector truy vấn với tất cả vector trong tập dữ liệu, cho kết quả chính xác tuyệt đối nhưng độ phức tạp tuyến tính. IVF (Inverted File Index) chia không gian vector thành nhiều cụm sử dụng thuật toán phân cụm, khi truy vấn chỉ tìm kiếm trong một số cụm gần nhất thay vì toàn bộ. HNSW (Hierarchical Navigable Small World) xây dựng cấu trúc đồ thị đa tầng cho tốc độ nhanh và độ chính xác cao nhưng tiêu tốn nhiều bộ nhớ hơn.
+
+Hệ thống sử dụng IVF vì cân bằng tốt giữa tốc độ, độ chính xác và bộ nhớ. Với quy mô dữ liệu hiện tại khoảng hàng chục nghìn bản ghi, phương pháp này đạt tốc độ tìm kiếm trong khoảng 1-3 mili giây với độ chính xác trên 95\% so với tìm kiếm vét cạn.
+
+\subsubsection{Độ đo tương đồng}
+
+Để so sánh các vector nhúng, cần lựa chọn độ đo tương đồng phù hợp. Độ tương đồng cosin đo góc giữa hai vector, không phụ thuộc vào độ lớn của chúng:
+
+\begin{equation}
+\text{cosine}(\mathbf{a}, \mathbf{b}) = \frac{\mathbf{a} \cdot \mathbf{b}}{||\mathbf{a}|| \cdot ||\mathbf{b}||}
+\end{equation}
+
+Giá trị nằm trong khoảng từ -1 đến 1, trong đó 1 nghĩa là hai vector cùng hướng và -1 nghĩa là ngược hướng.
+
+Ngoài độ tương đồng cosin, còn có khoảng cách Euclid đo khoảng cách thực giữa hai điểm trong không gian và tích vô hướng đo độ lớn của phép chiếu một vector lên vector khác. Hệ thống sử dụng độ tương đồng cosin vì phù hợp với bản chất của vector nhúng câu, tập trung vào hướng ngữ nghĩa hơn là độ lớn, đồng thời các vector từ mô hình SimCSE được huấn luyện với mục tiêu tối ưu độ tương đồng cosin.
+
+\subsubsection{Chiến lược lưu trữ và truy vấn}
+
+Hệ thống áp dụng chiến lược lưu trữ kép. PostgreSQL là nguồn dữ liệu chính lưu trữ các vector nhúng dưới dạng mảng byte, đảm bảo tính bền vững của dữ liệu. FAISS đóng vai trò lớp tối ưu hóa truy vấn trong bộ nhớ, cho phép tìm kiếm nhanh.
+
+Về chiến lược tải và lưu chỉ mục, khi khởi động hệ thống tải các vector từ PostgreSQL và xây dựng chỉ mục FAISS. Chỉ mục được lưu xuống đĩa để tránh phải xây dựng lại sau mỗi lần khởi động lại dịch vụ, giúp giảm thời gian khởi động từ vài phút xuống còn vài giây.
+
+\subsection{Lọc phân tầng}
+\label{subsec:cascade-filtering}
+
+Lọc phân tầng là chiến lược xử lý dữ liệu theo nhiều giai đoạn tuần tự, trong đó mỗi giai đoạn sử dụng các tiêu chí khác nhau để lọc dần tập ứng viên từ tập lớn đến tập nhỏ có chất lượng cao \cite{covington2016deep, viola2001rapid}.
+
+Nguyên lý cốt lõi của lọc phân tầng là xử lý theo thứ tự từ thô đến tinh. Giai đoạn đầu sử dụng các đặc trưng đơn giản và chi phí tính toán thấp để loại bỏ nhanh phần lớn các ứng viên không phù hợp. Các giai đoạn sau sử dụng đặc trưng phức tạp hơn nhưng chỉ cần xử lý trên tập nhỏ đã được lọc, từ đó tối ưu chi phí tính toán tổng thể.
+
+Trong hệ thống gợi ý của YouTube \cite{covington2016deep}, kiến trúc hai giai đoạn được áp dụng với giai đoạn sinh ứng viên lọc nhanh từ hàng triệu video xuống còn vài trăm, sau đó giai đoạn xếp hạng đánh giá kỹ để chọn ra kết quả cuối cùng. Tương tự, bộ phân loại phân tầng của Viola và Jones \cite{viola2001rapid} sử dụng chuỗi các bộ phân loại với độ phức tạp tăng dần để nhận dạng khuôn mặt.
+
+Hệ thống áp dụng lọc phân tầng với ba vòng: vòng thứ nhất sử dụng chỉ mục FAISS để tìm kiếm theo tiêu đề, vòng thứ hai so khớp kinh nghiệm với yêu cầu công việc, vòng thứ ba so khớp kỹ năng. So với phương pháp vét cạn, lọc phân tầng giảm khoảng 97\% số phép tính và đạt tốc độ nhanh hơn khoảng 40 lần. Chi tiết thuật toán được trình bày trong phần thiết kế hệ thống.
+
