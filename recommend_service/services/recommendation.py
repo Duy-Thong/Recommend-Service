@@ -16,13 +16,30 @@ logger = logging.getLogger(__name__)
 
 
 class RecommendationService:
-    def __init__(self):
+    def __init__(self, use_faiss: bool = True, shared_index_path: str = "./faiss_data/shared_jobs.faiss"):
+        """
+        Initialize recommendation service.
+
+        Args:
+            use_faiss: Whether to use FAISS for fast similarity search (default: True)
+            shared_index_path: Path to shared FAISS index (default: ./faiss_data/shared_jobs.faiss)
+                              This index is shared with SimilarJobsRecommendationService
+        """
         self.db = DatabaseConnection()
         self.cv_repo = CVRepository(self.db)
         self.job_repo = JobRepository(self.db)
         self.rec_repo = RecommendationRepository(self.db)
         self.embedding_service = EmbeddingService()
-        self.similarity_service = SimilarityService()
+
+        # Initialize SimilarityService with shared FAISS index
+        self.use_faiss = use_faiss
+        self.similarity_service = SimilarityService(
+            index_path=shared_index_path,
+            index_type="IVFFlat",
+            nlist=100,
+            nprobe=10
+        )
+
         self.top_k = settings.top_k_jobs
         self.batch_size = settings.batch_size
 
@@ -206,7 +223,7 @@ class RecommendationService:
         cv.content_hash = content_hash
 
     def _generate_recommendations(self, cvs: List[CVData], jobs: List[JobData]) -> int:
-        """Generate and save recommendations for all CVs"""
+        """Generate and save recommendations for all CVs using shared FAISS index"""
         total_recommendations = 0
 
         # Filter jobs with embeddings
@@ -216,12 +233,37 @@ class RecommendationService:
             logger.warning("No jobs with embeddings found")
             return 0
 
+        if self.use_faiss:
+            # Try to load existing shared FAISS index first
+            try:
+                logger.info("Attempting to load shared FAISS index")
+                self.similarity_service.load_index()
+
+                # Verify loaded index has data
+                if self.similarity_service.index is not None and self.similarity_service.job_ids:
+                    logger.info(f"Successfully loaded shared FAISS index with {len(self.similarity_service.job_ids)} jobs")
+                else:
+                    raise ValueError("Loaded index is empty")
+
+            except Exception as e:
+                logger.warning(f"Failed to load shared FAISS index: {e}")
+                logger.info("Building new FAISS index from current jobs")
+                self.similarity_service.build_index(jobs_with_embeddings)
+
+                # Save the index for future use
+                try:
+                    self.similarity_service.save_index()
+                    logger.info("FAISS index saved successfully")
+                except Exception as save_error:
+                    logger.warning(f"Failed to save FAISS index: {save_error}")
+
+        # Process CVs
         for cv in cvs:
             if not cv.title_embedding:
                 logger.warning(f"CV {cv.id} has no embedding, skipping")
                 continue
 
-            # Find top K similar jobs
+            # Find top K similar jobs (uses FAISS if available)
             top_jobs = self.similarity_service.find_top_k_jobs(
                 cv,
                 jobs_with_embeddings,
