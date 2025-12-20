@@ -1,0 +1,44 @@
+\section{Kiến thức nền tảng về học sâu và xử lý ngôn ngữ tự nhiên}
+
+\subsection{Tổng quan về xử lý ngôn ngữ tự nhiên}
+
+Xử lý ngôn ngữ tự nhiên (Natural Language Processing -- NLP) là một nhánh của trí tuệ nhân tạo tập trung vào việc cho phép máy tính hiểu, phân tích và sinh ra ngôn ngữ tự nhiên của con người \cite{khurana2022nlp}. NLP đã trải qua sự phát triển đáng kể trong những thập kỷ gần đây, từ các phương pháp dựa trên quy tắc đến các mô hình học máy và hiện tại là các mô hình học sâu tiền huấn luyện. Theo khảo sát của Khurana và cộng sự (2022), NLP đã mở rộng ứng dụng trong nhiều lĩnh vực như dịch máy, phát hiện spam, trích xuất thông tin, tóm tắt văn bản và trả lời câu hỏi \cite{khurana2022nlp}.
+
+Trong bối cảnh tuyển dụng trực tuyến, NLP đóng vai trò then chốt trong việc tự động hóa quy trình sàng lọc và gợi ý việc làm. Các bài toán NLP liên quan trực tiếp đến hệ thống gợi ý việc làm bao gồm: \textit{Phân loại văn bản} để phân loại hồ sơ theo ngành nghề và cấp bậc; \textit{Nhận dạng thực thể có tên (NER)} để trích xuất thông tin như kỹ năng, tổ chức, địa điểm từ hồ sơ ứng viên; \textit{Đo lường độ tương đồng ngữ nghĩa} để so khớp giữa hồ sơ ứng viên và tin tuyển dụng; và \textit{Trích xuất thông tin} để lấy các thông tin có cấu trúc từ văn bản phi cấu trúc như học vấn, kinh nghiệm làm việc.
+
+Các hệ thống tuyển dụng truyền thống chủ yếu sử dụng phương pháp so khớp dựa trên từ khóa, có hạn chế trong việc hiểu ngữ nghĩa và xử lý các cách diễn đạt khác nhau cho cùng một ý nghĩa. Điều này đặt ra nhu cầu áp dụng các phương pháp học sâu để cải thiện chất lượng gợi ý.
+
+\subsection{Học sâu trong xử lý ngôn ngữ tự nhiên}
+
+Học sâu (Deep Learning) là một nhánh của học máy sử dụng các mạng nơ-ron nhân tạo với nhiều lớp xử lý để học cách biểu diễn dữ liệu ở nhiều mức trừu tượng khác nhau. Sự phát triển của học sâu đã tạo ra những bước tiến đột phá trong NLP, cho phép các mô hình học trực tiếp từ dữ liệu thô mà không cần thiết kế đặc trưng thủ công \cite{khurana2022nlp}.
+
+Quá trình phát triển của học sâu trong NLP có thể được chia thành ba giai đoạn chính:
+
+\textit{Mạng nơ-ron hồi quy (RNN) và LSTM:} RNN được thiết kế để xử lý dữ liệu dạng chuỗi bằng cách duy trì trạng thái ẩn qua từng bước thời gian, phù hợp với bản chất tuần tự của ngôn ngữ. Tuy nhiên, RNN gặp khó khăn khi xử lý chuỗi dài do vấn đề triệt tiêu gradient (vanishing gradient). LSTM (Long Short-Term Memory) ra đời để giải quyết hạn chế này thông qua cơ chế cổng điều khiển, cho phép ghi nhớ thông tin trong khoảng thời gian dài hơn \cite{khurana2022nlp}. Dù vậy, cả RNN và LSTM đều xử lý tuần tự, khó song song hóa và tốn thời gian huấn luyện.
+
+\textit{Kiến trúc Transformer:} Năm 2017, Vaswani và cộng sự giới thiệu kiến trúc Transformer, đánh dấu bước ngoặt trong NLP \cite{vaswani2017attention}. Transformer loại bỏ hoàn toàn cơ chế hồi quy và thay thế bằng cơ chế Self-Attention, cho phép mô hình xử lý toàn bộ chuỗi dữ liệu song song và tham chiếu trực tiếp đến tất cả các vị trí trong chuỗi. Điều này mang lại khả năng xử lý nhanh hơn, hiệu suất cao hơn và khả năng mở rộng lên hàng trăm tỷ tham số.
+
+\textit{Mô hình ngôn ngữ tiền huấn luyện:} Dựa trên Transformer, các mô hình ngôn ngữ tiền huấn luyện như BERT, GPT đã được phát triển. Các mô hình này được huấn luyện trước trên lượng lớn dữ liệu văn bản không gán nhãn, sau đó tinh chỉnh (fine-tune) cho các tác vụ cụ thể, đạt kết quả tiên tiến nhất trên hầu hết các bài toán NLP.
+
+\subsection{BERT và các mô hình sentence embedding}
+
+BERT (Bidirectional Encoder Representations from Transformers) được Google AI giới thiệu năm 2018, là mô hình ngôn ngữ tiền huấn luyện đầu tiên đạt hiệu suất vượt trội trên nhiều bài toán NLP, được xây dựng dựa trên kiến trúc Transformer \cite{vaswani2017attention}. Điểm khác biệt quan trọng của BERT là khả năng hiểu ngữ cảnh hai chiều -- xem xét cả các từ phía trước và phía sau khi biểu diễn một từ, khác với các mô hình trước đó chỉ xem xét ngữ cảnh một chiều.
+
+Tuy nhiên, BERT gốc không tối ưu cho bài toán so sánh độ tương đồng ngữ nghĩa giữa các văn bản do chi phí tính toán cao khi phải xử lý từng cặp văn bản. Để giải quyết vấn đề này, các mô hình sentence embedding đã được phát triển, sử dụng kiến trúc siamese network để tạo sentence embedding độc lập cho mỗi văn bản, cho phép so sánh nhanh bằng cosine similarity. Các mô hình này giảm đáng kể thời gian tính toán trong khi vẫn duy trì chất lượng cao.
+
+Đối với tiếng Việt, các mô hình BERT được tiền huấn luyện riêng trên dữ liệu tiếng Việt đã đạt kết quả tiên tiến nhất trên nhiều bài toán NLP tiếng Việt. Mô hình \textit{VoVanPhuc/sup-SimCSE-VietNamese-phobert-base} được xây dựng trên nền tảng PhoBERT và được tinh chỉnh cho bài toán đo lường độ tương đồng ngữ nghĩa tiếng Việt.
+
+\subsection{Lý do lựa chọn mô hình cho bài toán gợi ý việc làm}
+
+Dựa trên phân tích các phương pháp hiện có, nhóm nghiên cứu lựa chọn mô hình \textit{VoVanPhuc/sup-SimCSE-VietNamese-phobert-base} làm nền tảng cho hệ thống gợi ý việc làm với các lý do sau:
+
+\textit{Khả năng hiểu ngữ cảnh:} Khác với các phương pháp truyền thống như TF-IDF chỉ dựa trên tần suất từ, BERT xem xét ngữ cảnh hai chiều khi biểu diễn từ. Điều này quan trọng trong việc phân tích CV và mô tả công việc, nơi ý nghĩa của từ phụ thuộc vào ngữ cảnh -- ví dụ từ ``Python'' có thể chỉ ngôn ngữ lập trình hoặc loài rắn tùy theo văn bản.
+
+\textit{Hiệu quả trong đo lường độ tương đồng:} Mô hình cho phép tạo embedding cho mỗi văn bản một lần duy nhất, sau đó so sánh nhanh bằng cosine similarity. Kết hợp với các thư viện tìm kiếm vector như FAISS, hệ thống có thể xử lý hàng triệu văn bản trong thời gian thực.
+
+\textit{Hỗ trợ tiếng Việt:} Với đặc thù bài toán gợi ý việc làm tại Việt Nam, việc sử dụng mô hình được tối ưu cho tiếng Việt là yếu tố quan trọng. Mô hình \textit{VoVanPhuc/sup-SimCSE-VietNamese-phobert-base} được xây dựng trên PhoBERT và tinh chỉnh cho bài toán đo lường độ tương đồng ngữ nghĩa tiếng Việt.
+
+\textit{Cân bằng hiệu suất và tài nguyên:} So với các mô hình ngôn ngữ lớn như GPT-3 hay LLaMA, BERT có kích thước vừa phải, cho phép triển khai trên GPU phổ thông với chi phí vận hành hợp lý cho môi trường triển khai thực tế.
+
+Tổng kết, mô hình \textit{VoVanPhuc/sup-SimCSE-VietNamese-phobert-base} đáp ứng tốt các yêu cầu của bài toán: hiểu ngữ nghĩa sâu, hiệu suất cao, tối ưu cho tiếng Việt, và cân bằng giữa chất lượng và tài nguyên tính toán.
+

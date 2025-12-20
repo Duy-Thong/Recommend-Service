@@ -75,7 +75,7 @@ class Evaluator:
     def get_predictions(
         self,
         cv_ids: List[str],
-        top_k: int = 10
+        top_k: int = 30
     ) -> Dict[str, List[str]]:
         """
         Get recommendation predictions for given CVs.
@@ -123,7 +123,7 @@ class Evaluator:
         # Get predictions
         logger.info("Getting predictions from recommendation system...")
         cv_ids = list(ground_truth.keys())
-        predictions = self.get_predictions(cv_ids, top_k=10)
+        predictions = self.get_predictions(cv_ids, top_k=30)
 
         # Filter out CVs without predictions for cleaner evaluation
         valid_ground_truth = {

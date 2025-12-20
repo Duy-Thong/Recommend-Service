@@ -35,7 +35,7 @@ Về đặc thù ngôn ngữ tiếng Việt, đây là ngôn ngữ đơn lập v
 
 Về kết quả so sánh, PhoBERT đạt hiệu suất vượt trội so với các mô hình đa ngôn ngữ như mBERT và XLM-R trên các tác vụ xử lý ngôn ngữ tự nhiên tiếng Việt. Cụ thể, trên tác vụ gán nhãn từ loại PhoBERT đạt độ chính xác 96,7\% so với 95,4\% của mBERT; trên tác vụ nhận dạng thực thể đạt điểm F1 94,7\% so với 92,0\% của XLM-R \cite{nguyen2020phobert}. Sự vượt trội này nhờ PhoBERT được huấn luyện chuyên biệt trên dữ liệu tiếng Việt với bộ từ vựng và phương pháp tách từ phù hợp.
 
-Hệ thống sử dụng mô hình SimCSE phiên bản tiếng Việt xây dựng trên nền tảng PhoBERT \cite{gao2021simcse}. SimCSE là phương pháp học đối chiếu trong đó cùng một câu được đưa qua mô hình hai lần với các giá trị bỏ ngẫu nhiên khác nhau để tạo hai biểu diễn, với mục tiêu làm cho hai biểu diễn của cùng câu gần nhau và biểu diễn của các câu khác thì xa nhau. Phương pháp này tạo ra các vector nhúng câu có chất lượng cao cho tác vụ đo độ tương đồng ngữ nghĩa.
+Hệ thống sử dụng mô hình \textit{VoVanPhuc/sup-SimCSE-VietNamese-phobert-base}, một mô hình được xây dựng trên nền tảng PhoBERT và được tinh chỉnh cho bài toán đo lường độ tương đồng ngữ nghĩa tiếng Việt. Mô hình này tạo ra các vector nhúng câu có chất lượng cao, phù hợp cho tác vụ so khớp ngữ nghĩa giữa hồ sơ ứng viên và mô tả công việc.
 
 \subsection{Lưu trữ và truy vấn vector}
 \label{subsec:luu-tru-vector}
@@ -82,4 +82,46 @@ Nguyên lý cốt lõi của lọc phân tầng là xử lý theo thứ tự t�
 Trong hệ thống gợi ý của YouTube \cite{covington2016deep}, kiến trúc hai giai đoạn được áp dụng với giai đoạn sinh ứng viên lọc nhanh từ hàng triệu video xuống còn vài trăm, sau đó giai đoạn xếp hạng đánh giá kỹ để chọn ra kết quả cuối cùng. Tương tự, bộ phân loại phân tầng của Viola và Jones \cite{viola2001rapid} sử dụng chuỗi các bộ phân loại với độ phức tạp tăng dần để nhận dạng khuôn mặt.
 
 Hệ thống áp dụng lọc phân tầng với ba vòng: vòng thứ nhất sử dụng chỉ mục FAISS để tìm kiếm theo tiêu đề, vòng thứ hai so khớp kinh nghiệm với yêu cầu công việc, vòng thứ ba so khớp kỹ năng. So với phương pháp vét cạn, lọc phân tầng giảm khoảng 97\% số phép tính và đạt tốc độ nhanh hơn khoảng 40 lần. Chi tiết thuật toán được trình bày trong phần thiết kế hệ thống.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[>=stealth, thick]
+
+% CV features box (top)
+\node[draw, fill=green!20, rounded corners, minimum width=2.5cm, minimum height=0.7cm] (cv) at (5.5,2) {Đặc trưng CV};
+
+% Database (left)
+\node[draw, fill=pink!30, minimum width=1.2cm, minimum height=1cm, rounded corners=2pt] (jobs) at (0,0) {Jobs};
+\node[font=\scriptsize] at (0,-0.8) {Database};
+
+% Stage 1: FAISS Title
+\node[draw, fill=blue!20, minimum width=2.2cm, minimum height=1cm] (stage1) at (3,0) {\scriptsize Tương đồng};
+\node[font=\tiny] at (3,-0.8) {Tiêu đề (FAISS)};
+
+% Stage 2: Experience vs Requirements
+\node[draw, fill=blue!20, minimum width=2.2cm, minimum height=1cm] (stage2) at (6.2,0) {\scriptsize Tương đồng};
+\node[font=\tiny] at (6.2,-0.8) {KN $\leftrightarrow$ Yêu cầu};
+
+% Stage 3: Skills
+\node[draw, fill=blue!20, minimum width=2.2cm, minimum height=1cm] (stage3) at (9.4,0) {\scriptsize Tương đồng};
+\node[font=\tiny] at (9.4,-0.8) {Kỹ năng};
+
+% Result
+\node[draw, fill=yellow!30, circle, minimum size=0.8cm] (result) at (12,0) {K};
+
+% Main flow arrows
+\draw[->] (jobs) -- node[above, font=\scriptsize] {N} (stage1);
+\draw[->] (stage1) -- node[above, font=\scriptsize] {$K_1$} (stage2);
+\draw[->] (stage2) -- node[above, font=\scriptsize] {$K_2$} (stage3);
+\draw[->] (stage3) -- node[above, font=\scriptsize] {} (result);
+
+% CV influence arrows (dashed)
+\draw[->, dashed, gray] (cv) -- (stage1.north);
+\draw[->, dashed, gray] (cv) -- (stage2.north);
+\draw[->, dashed, gray] (cv) -- (stage3.north);
+
+\end{tikzpicture}
+\caption{Kiến trúc lọc phân tầng ba giai đoạn}
+\label{fig:cascade-filtering}
+\end{figure}
 

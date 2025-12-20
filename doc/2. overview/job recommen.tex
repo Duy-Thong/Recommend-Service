@@ -1,0 +1,33 @@
+\section{Tổng quan về hệ thống gợi ý việc làm}
+
+\subsection{Khái niệm}
+
+Hệ thống gợi ý (Recommendation System) là một nhánh quan trọng của học máy và khai thác dữ liệu, được thiết kế để dự đoán sở thích của người dùng và đưa ra các gợi ý phù hợp \cite{ricci2011recommender}. Hệ thống gợi ý giải quyết vấn đề quá tải thông tin bằng cách lọc và sắp xếp thông tin phù hợp với từng người dùng. Hệ thống gợi ý đã trở nên phổ biến trong nhiều lĩnh vực như thương mại điện tử (Amazon), giải trí (Netflix, Spotify), và mạng xã hội (Facebook, TikTok).
+
+Trong lĩnh vực tuyển dụng, hệ thống gợi ý việc làm có nhiệm vụ kết nối ứng viên với các vị trí công việc phù hợp. Bài toán này có thể được nhìn nhận như một bài toán so khớp hai chiều: gợi ý công việc cho ứng viên dựa trên hồ sơ và kỹ năng, đồng thời gợi ý ứng viên cho nhà tuyển dụng dựa trên yêu cầu công việc. Đây là bài toán đặc biệt thách thức do tính chất phi cấu trúc của dữ liệu văn bản (hồ sơ ứng viên, mô tả công việc) và sự đa dạng trong cách diễn đạt cùng một ý nghĩa.
+
+\subsection{Các phương pháp gợi ý}
+
+Các phương pháp gợi ý có thể được phân loại thành ba nhóm chính \cite{ricci2011recommender}:
+
+\textit{Lọc dựa trên nội dung:} Phương pháp này gợi ý các mục tương tự với những mục mà người dùng đã quan tâm trước đó, dựa trên đặc trưng nội dung của các mục. Trong bài toán gợi ý việc làm, content-based filtering sử dụng các đặc trưng như kỹ năng, kinh nghiệm, ngành nghề để so sánh giữa hồ sơ ứng viên và mô tả công việc. Ưu điểm là không phụ thuộc vào dữ liệu từ người dùng khác, phù hợp với người dùng mới. Tuy nhiên, phương pháp này có hạn chế về khả năng khám phá -- chỉ gợi ý các mục tương tự với lịch sử.
+
+\textit{Lọc cộng tác:} Phương pháp này dựa trên giả định rằng những người dùng có sở thích tương tự trong quá khứ sẽ có sở thích tương tự trong tương lai. Collaborative filtering tận dụng thông tin từ cộng đồng người dùng để đưa ra gợi ý, có khả năng phát hiện sở thích tiềm ẩn và đưa ra gợi ý đa dạng. Tuy nhiên, phương pháp này gặp vấn đề khởi động nguội (cold start) khi người dùng hoặc mục mới chưa có đủ dữ liệu tương tác.
+
+\textit{Phương pháp lai:} Kết hợp lọc dựa trên nội dung và lọc cộng tác để tận dụng ưu điểm và giảm thiểu nhược điểm của từng phương pháp \cite{ricci2011recommender}. Các hệ thống gợi ý hiện đại như Netflix, Amazon thường sử dụng phương pháp lai để đạt hiệu suất tốt nhất.
+
+Với sự phát triển của học sâu, các phương pháp dựa trên neural networks đã trở thành xu hướng chính trong hệ thống gợi ý hiện đại. Đặc biệt, các mô hình ngôn ngữ tiền huấn luyện đã mang lại bước đột phá trong việc hiểu ngữ nghĩa văn bản, cho phép so khớp chính xác hơn giữa hồ sơ ứng viên và mô tả công việc.
+
+Trong bài toán gợi ý việc làm, hệ thống sử dụng mô hình nhúng ngữ nghĩa tiếng Việt \textit{VoVanPhuc/sup-SimCSE-VietNamese-phobert-base} để mã hóa cả hồ sơ ứng viên và mô tả công việc thành các vector nhúng. Đây là mô hình được xây dựng trên nền tảng PhoBERT và được tinh chỉnh cho bài toán đo lường độ tương đồng ngữ nghĩa tiếng Việt. Hệ thống áp dụng chiến lược lọc phân tầng qua nhiều vòng lọc tuần tự (tiêu đề, kinh nghiệm, kỹ năng) để tìm ra các công việc phù hợp nhất, kết hợp với thư viện FAISS để tìm kiếm vector hiệu quả.
+
+\subsection{Các độ đo đánh giá}
+
+Đánh giá hiệu suất của hệ thống gợi ý đòi hỏi các độ đo phù hợp với từng bài toán cụ thể \cite{ricci2011recommender}. Hệ thống sử dụng ba độ đo xếp hạng chính:
+
+\textit{Mean Reciprocal Rank (MRR):} Tính trung bình nghịch đảo vị trí của kết quả phù hợp đầu tiên. MRR = 1,0 nghĩa là kết quả phù hợp luôn xuất hiện ở vị trí đầu tiên. Độ đo này phản ánh khả năng đưa công việc phù hợp nhất lên đầu danh sách gợi ý.
+
+\textit{Normalized Discounted Cumulative Gain (NDCG@K):} Đánh giá chất lượng xếp hạng có tính đến vị trí của kết quả, với các vị trí đầu được đánh trọng số cao hơn. NDCG nằm trong khoảng từ 0 đến 1, giá trị cao hơn thể hiện chất lượng xếp hạng tốt hơn.
+
+\textit{Hit Rate@K:} Tính tỷ lệ truy vấn có ít nhất một kết quả phù hợp trong K kết quả đầu tiên. Hit Rate@K = 1,0 nghĩa là mọi truy vấn đều tìm được ít nhất một kết quả phù hợp. Độ đo này đặc biệt quan trọng vì phản ánh trực tiếp trải nghiệm người dùng: liệu họ có thấy được công việc phù hợp hay không.
+
+Chi tiết về cách tính toán và kết quả thực nghiệm sẽ được trình bày ở chương sau.

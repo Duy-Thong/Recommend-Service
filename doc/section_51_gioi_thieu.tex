@@ -1,7 +1,0 @@
-\section{Giới thiệu}
-\label{sec:gioi-thieu}
-
-Hệ thống gợi ý việc làm là một thành phần quan trọng trong các nền tảng tuyển dụng trực tuyến hiện đại, giúp kết nối ứng viên với các cơ hội việc làm phù hợp dựa trên kỹ năng, kinh nghiệm và nguyện vọng của họ. Khác với các phương pháp tìm kiếm truyền thống dựa trên từ khóa, hệ thống này sử dụng kỹ thuật nhúng văn bản để hiểu ngữ nghĩa sâu của nội dung, từ đó đánh giá mức độ phù hợp một cách chính xác hơn.
-
-Hệ thống sử dụng mô hình nhúng ngữ nghĩa tiếng Việt dựa trên PhoBERT \cite{nguyen2020phobert} để chuyển đổi thông tin ứng viên và mô tả công việc thành các vector đa chiều. Các vector này được lưu trữ và truy vấn hiệu quả thông qua thư viện FAISS \cite{johnson2019billion}. Để nâng cao độ chính xác, hệ thống áp dụng chiến lược lọc phân tầng qua ba vòng lọc tuần tự dựa trên tiêu đề, kinh nghiệm và kỹ năng. Ngoài ra, cơ chế băm nội dung được sử dụng để chỉ tính toán lại vector nhúng khi dữ liệu thay đổi, giúp tối ưu hiệu năng xử lý.
-

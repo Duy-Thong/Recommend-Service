@@ -5,7 +5,11 @@
       "Bash(python scripts/calculate_similar_jobs.py:*)",
       "Bash(python scripts/query_similar_jobs.py:*)",
       "Bash(python:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)",
+      "Bash(.venvScriptspython.exe -c \"\nimport pymongo\n\nclient = pymongo.MongoClient\\(''mongodb://localhost:27017''\\)\ndb = client[''job_recommendation'']\n\n# Count all jobs\ntotal_jobs = db.jobs.count_documents\\({}\\)\nprint\\(f''Total jobs in database: {total_jobs}''\\)\n\n# Check job statuses\npipeline = [\n    {''$group'': {''_id'': ''$status'', ''count'': {''$sum'': 1}}}\n]\nstatuses = list\\(db.jobs.aggregate\\(pipeline\\)\\)\nprint\\(f''Jobs by status:''\\)\nfor s in statuses:\n    print\\(f''  - {s[\"\"_id\"\"]}: {s[\"\"count\"\"]}''\\)\n\nclient.close\\(\\)\n\")",
+      "Bash(\".venv\\\\Scripts\\\\python.exe\" -c \"import pymongo; client = pymongo.MongoClient\\(''mongodb://localhost:27017''\\); db = client[''job_recommendation'']; print\\(''Total jobs:'', db.jobs.count_documents\\({}\\)\\); print\\(''CVs:'', db.cvs.count_documents\\({}\\)\\)\")"
     ]
   }
 }
