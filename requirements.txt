@@ -14,3 +14,9 @@ APScheduler==3.10.4
 # Utilities
 numpy>=1.24.0
 faiss-cpu>=1.7.4  # Use faiss-gpu if you have GPU support
+
+# Evaluation
+sentence-transformers>=2.2.0  # For multilingual title embeddings
+pandas>=2.0.0  # For CSV handling
+tqdm>=4.65.0  # For progress bars
+scikit-learn>=1.3.0  # For TF-IDF baseline

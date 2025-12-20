@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python scripts/import_data.py:*)",
       "Bash(python scripts/calculate_similar_jobs.py:*)",
-      "Bash(python scripts/query_similar_jobs.py:*)"
+      "Bash(python scripts/query_similar_jobs.py:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)"
     ]
   }
 }
