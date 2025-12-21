@@ -142,7 +142,6 @@ class CVRepository:
         """
         now = datetime.utcnow()
         with self.db.get_cursor() as cursor:
-            from psycopg2.extras import execute_batch
             params = [
                 (
                     json.dumps(title_emb) if title_emb else None,
@@ -154,7 +153,7 @@ class CVRepository:
                 )
                 for cv_id, title_emb, skills_emb, exp_emb, content_hash in cv_updates
             ]
-            execute_batch(cursor, query, params, page_size=100)
+            cursor.executemany(query, params)
             logger.info(f"Batch updated embeddings for {len(cv_updates)} CVs")
 
     @staticmethod
@@ -330,7 +329,6 @@ class JobRepository:
         """
         now = datetime.utcnow()
         with self.db.get_cursor() as cursor:
-            from psycopg2.extras import execute_batch
             params = [
                 (
                     json.dumps(title_emb) if title_emb else None,
@@ -342,7 +340,7 @@ class JobRepository:
                 )
                 for job_id, title_emb, skills_emb, req_emb, content_hash in job_updates
             ]
-            execute_batch(cursor, query, params, page_size=100)
+            cursor.executemany(query, params)
             logger.info(f"Batch updated embeddings for {len(job_updates)} jobs")
 
     @staticmethod
