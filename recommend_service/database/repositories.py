@@ -19,7 +19,7 @@ class CVRepository:
             SELECT
                 c.id,
                 c.title,
-                c."currentPosition",
+                c.summary,
                 c."titleEmbedding",
                 c."skillsEmbedding",
                 c."experienceEmbedding",
@@ -93,7 +93,7 @@ class CVRepository:
         """Compute hash of CV content to detect changes (only fields used for embedding)"""
         content = {
             "title": cv.get("title") or "",
-            "currentPosition": cv.get("currentPosition") or "",
+            "summary": cv.get("summary") or "",
             "skills": [(s.get("skillName") or "") for s in skills],
             "experiences": [
                 (e.get("title") or "") + (e.get("description") or "")
@@ -114,6 +114,7 @@ class JobRepository:
             SELECT
                 j.id,
                 j.title,
+                j.description,
                 j."titleEmbedding",
                 j."skillsEmbedding",
                 j."requirementEmbedding",
@@ -132,6 +133,7 @@ class JobRepository:
             SELECT
                 j.id,
                 j.title,
+                j.description,
                 j."titleEmbedding",
                 j."skillsEmbedding",
                 j."requirementEmbedding",
@@ -208,6 +210,7 @@ class JobRepository:
         """Compute hash of job content to detect changes (only fields used for embedding)"""
         content = {
             "title": job.get("title") or "",
+            "description": job.get("description") or "",
             "skills": [(s.get("skillName") or "") for s in skills],
             "requirements": [
                 (r.get("title") or "") + (r.get("description") or "")

@@ -845,26 +845,26 @@ class DataImporter:
                 (str(uuid.uuid4()), job_id, min_salary, max_salary, is_negotiable),
             )
 
-        # Insert requirements
-        requirements = split_text_to_items(row.get("Job Requirements", ""))
-        for req in requirements[:10]:  # Limit to 10
+        # Insert requirements - single record with full text as description
+        req_text = row.get("Job Requirements", "")
+        if req_text and req_text.strip():
             cursor.execute(
                 """
-                INSERT INTO job_requirements (id, "jobId", title, "createdAt", "updatedAt")
-                VALUES (%s, %s, %s, NOW(), NOW())
+                INSERT INTO job_requirements (id, "jobId", title, description, "createdAt", "updatedAt")
+                VALUES (%s, %s, %s, %s, NOW(), NOW())
             """,
-                (str(uuid.uuid4()), job_id, req[:500]),
+                (str(uuid.uuid4()), job_id, "Yêu cầu", req_text.strip()),
             )
 
-        # Insert benefits
-        benefits = split_text_to_items(row.get("Benefits", ""))
-        for benefit in benefits[:10]:  # Limit to 10
+        # Insert benefits - single record with full text as description
+        benefit_text = row.get("Benefits", "")
+        if benefit_text and benefit_text.strip():
             cursor.execute(
                 """
-                INSERT INTO job_benefits (id, "jobId", title, "createdAt", "updatedAt")
-                VALUES (%s, %s, %s, NOW(), NOW())
+                INSERT INTO job_benefits (id, "jobId", title, description, "createdAt", "updatedAt")
+                VALUES (%s, %s, %s, %s, NOW(), NOW())
             """,
-                (str(uuid.uuid4()), job_id, benefit[:500]),
+                (str(uuid.uuid4()), job_id, "Quyền lợi", benefit_text.strip()),
             )
 
         # Extract and insert skills from both Job Requirements and Job Description
@@ -875,8 +875,8 @@ class DataImporter:
         for skill in skills[:20]:  # Limit to 20 skills per job
             cursor.execute(
                 """
-                INSERT INTO job_skills (id, "jobId", "skillName", "createdAt", "updatedAt")
-                VALUES (%s, %s, %s, NOW(), NOW())
+                INSERT INTO job_skills (id, "jobId", "skillName", level, "createdAt", "updatedAt")
+                VALUES (%s, %s, %s, 'INTERMEDIATE', NOW(), NOW())
             """,
                 (str(uuid.uuid4()), job_id, skill[:100]),
             )
@@ -931,15 +931,9 @@ class DataImporter:
         # CV title from desired_job_translated
         cv_title = row.get("desired_job_translated", "CV của " + user_name)
 
-        # Build summary from available info
-        summary_parts = []
-        if row.get("industry"):
-            summary_parts.append(f"Ngành: {row['industry']}")
-        if row.get("workplace_desired"):
-            summary_parts.append(f"Nơi làm việc: {row['workplace_desired']}")
-        if row.get("desired_salary"):
-            summary_parts.append(f"Mức lương mong muốn: {row['desired_salary']}")
-        summary = ". ".join(summary_parts) if summary_parts else None
+        # Use Target column as summary (career objective)
+        target = row.get("Target", "")
+        summary = target.strip() if target and target.strip() else None
 
         # Map experience level
         work_exp = row.get("work_experience", "")
@@ -968,21 +962,15 @@ class DataImporter:
                 (str(uuid.uuid4()), cv_id, skill[:100]),
             )
 
-        # Insert work experience
+        # Insert work experience - single record with full Experience text as description
         exp_text = row.get("Experience", "")
-        experiences = split_text_to_items(exp_text)
-
-        # Also add work_experience as a record
-        if work_exp and work_exp.strip():
-            experiences.insert(0, work_exp)
-
-        for exp in experiences[:10]:  # Limit to 10
+        if exp_text and exp_text.strip():
             cursor.execute(
                 """
-                INSERT INTO work_experiences (id, "cvId", title, company, "createdAt", "updatedAt")
-                VALUES (%s, %s, %s, %s, NOW(), NOW())
+                INSERT INTO work_experiences (id, "cvId", title, description, company, "createdAt", "updatedAt")
+                VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
             """,
-                (str(uuid.uuid4()), cv_id, exp[:255], ""),
+                (str(uuid.uuid4()), cv_id, "Kinh nghiệm", exp_text.strip(), ""),
             )
 
 

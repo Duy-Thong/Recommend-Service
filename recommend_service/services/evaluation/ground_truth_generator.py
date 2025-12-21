@@ -1,7 +1,10 @@
 """
 Ground Truth Generator for Evaluation.
 
-Generates ground truth CV-Job pairs using title embedding similarity.
+Generates ground truth CV-Job pairs using combined text embedding similarity.
+- CV: title + experience descriptions
+- Job: title + requirement descriptions
+
 Uses sentence-transformers/paraphrase-multilingual-mpnet-base-v2 for embeddings
 and FAISS for efficient similarity search.
 """
@@ -33,21 +36,38 @@ class GroundTruthPair:
     similarity: float
 
 
+@dataclass
+class CVWithText:
+    """CV with combined text for embedding."""
+    cv_id: str
+    title: str
+    combined_text: str  # title + experience
+
+
+@dataclass
+class JobWithText:
+    """Job with combined text for embedding."""
+    job_id: str
+    title: str
+    combined_text: str  # title + requirements
+
+
 class GroundTruthGenerator:
     """
-    Generates ground truth CV-Job pairs using title embedding similarity.
+    Generates ground truth CV-Job pairs using combined text embedding similarity.
 
     Process:
-    1. Load CVs and Jobs from database
-    2. Embed all job titles using paraphrase-multilingual-mpnet-base-v2
-    3. Build FAISS index from job title embeddings
-    4. For each CV, find the most similar job (top-1) based on title
-    5. Save pairs to CSV
+    1. Load CVs with experiences and Jobs with requirements from database
+    2. Combine title + experience (CV) and title + requirements (Job)
+    3. Embed combined texts using paraphrase-multilingual-mpnet-base-v2
+    4. Build FAISS index from job embeddings
+    5. For each CV, find the most similar job (top-1)
+    6. Save pairs to CSV
     """
 
     def __init__(
         self,
-        cv_limit: int = 2000,
+        cv_limit: int = 5000,
         job_limit: int = 5000,
         index_path: str = "./faiss_data/title_jobs.faiss",
         output_path: str = "./evaluation_data/ground_truth.csv"
@@ -77,7 +97,7 @@ class GroundTruthGenerator:
 
     def load_cvs(self) -> List[Tuple[str, str]]:
         """
-        Load CVs from database.
+        Load CVs from database (legacy method for backward compatibility).
 
         Returns:
             List of (cv_id, cv_title) tuples
@@ -96,9 +116,74 @@ class GroundTruthGenerator:
         logger.info(f"Loaded {len(cvs)} CVs from database")
         return cvs
 
+    def load_cvs_with_experience(self) -> List[CVWithText]:
+        """
+        Load CVs with experience data for combined embedding.
+
+        Returns:
+            List of CVWithText objects with combined text (title + experience)
+        """
+        # First get all CVs
+        cv_query = """
+            SELECT id, title
+            FROM cvs
+            WHERE "isMain" = true AND title IS NOT NULL AND title != ''
+            LIMIT %s
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(cv_query, (self.cv_limit,))
+            cv_rows = cursor.fetchall()
+
+        if not cv_rows:
+            return []
+
+        cv_ids = [row["id"] for row in cv_rows]
+
+        # Get experiences for all CVs
+        exp_query = """
+            SELECT "cvId", title, description
+            FROM work_experiences
+            WHERE "cvId" = ANY(%s)
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(exp_query, (cv_ids,))
+            exp_rows = cursor.fetchall()
+
+        # Group experiences by CV
+        cv_experiences = {}
+        for row in exp_rows:
+            cv_id = row["cvId"]
+            if cv_id not in cv_experiences:
+                cv_experiences[cv_id] = []
+            exp_text = f"{row['title'] or ''} {row['description'] or ''}".strip()
+            if exp_text:
+                cv_experiences[cv_id].append(exp_text)
+
+        # Build CVWithText objects
+        cvs = []
+        for row in cv_rows:
+            cv_id = row["id"]
+            title = row["title"]
+            if not title:
+                continue
+
+            # Combine title + experiences
+            experiences = cv_experiences.get(cv_id, [])
+            experience_text = " ".join(experiences)
+            combined_text = f"{title} {experience_text}".strip()
+
+            cvs.append(CVWithText(
+                cv_id=cv_id,
+                title=title,
+                combined_text=combined_text
+            ))
+
+        logger.info(f"Loaded {len(cvs)} CVs with experience data")
+        return cvs
+
     def load_jobs(self) -> List[Tuple[str, str]]:
         """
-        Load jobs from database.
+        Load jobs from database (legacy method for backward compatibility).
 
         Returns:
             List of (job_id, job_title) tuples
@@ -120,9 +205,139 @@ class GroundTruthGenerator:
         logger.info(f"Loaded {len(jobs)} jobs from database")
         return jobs
 
+    def load_jobs_with_requirements(self) -> List[JobWithText]:
+        """
+        Load jobs with requirements data for combined embedding.
+
+        Returns:
+            List of JobWithText objects with combined text (title + requirements)
+        """
+        # First get all jobs
+        job_query = """
+            SELECT id, title
+            FROM jobs
+            WHERE status = 'ACTIVE'
+                AND title IS NOT NULL AND title != ''
+            LIMIT %s
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(job_query, (self.job_limit,))
+            job_rows = cursor.fetchall()
+
+        if not job_rows:
+            return []
+
+        job_ids = [row["id"] for row in job_rows]
+
+        # Get requirements for all jobs
+        req_query = """
+            SELECT "jobId", title, description
+            FROM job_requirements
+            WHERE "jobId" = ANY(%s)
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(req_query, (job_ids,))
+            req_rows = cursor.fetchall()
+
+        # Group requirements by job
+        job_requirements = {}
+        for row in req_rows:
+            job_id = row["jobId"]
+            if job_id not in job_requirements:
+                job_requirements[job_id] = []
+            req_text = f"{row['title'] or ''} {row['description'] or ''}".strip()
+            if req_text:
+                job_requirements[job_id].append(req_text)
+
+        # Build JobWithText objects
+        jobs = []
+        for row in job_rows:
+            job_id = row["id"]
+            title = row["title"]
+            if not title:
+                continue
+
+            # Combine title + requirements
+            requirements = job_requirements.get(job_id, [])
+            requirements_text = " ".join(requirements)
+            combined_text = f"{title} {requirements_text}".strip()
+
+            jobs.append(JobWithText(
+                job_id=job_id,
+                title=title,
+                combined_text=combined_text
+            ))
+
+        logger.info(f"Loaded {len(jobs)} jobs with requirements data")
+        return jobs
+
+    def load_jobs_with_db_embeddings(self) -> List[Tuple[str, str, np.ndarray]]:
+        """
+        Load jobs with their titleEmbedding from database.
+        Uses the same embeddings that the recommendation system uses.
+
+        Returns:
+            List of (job_id, job_title, embedding) tuples
+        """
+        query = """
+            SELECT id, title, "titleEmbedding"
+            FROM jobs
+            WHERE status = 'ACTIVE'
+                AND title IS NOT NULL AND title != ''
+                AND "titleEmbedding" IS NOT NULL
+            LIMIT %s
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(query, (self.job_limit,))
+            rows = cursor.fetchall()
+
+        import json as json_module
+        jobs = []
+        for row in rows:
+            if row["title"] and row["titleEmbedding"]:
+                emb = row["titleEmbedding"]
+                if isinstance(emb, str):
+                    emb = json_module.loads(emb)
+                jobs.append((row["id"], row["title"], np.array(emb, dtype=np.float32)))
+
+        logger.info(f"Loaded {len(jobs)} jobs with embeddings from database")
+        return jobs
+
+    def load_cvs_with_db_embeddings(self) -> List[Tuple[str, str, np.ndarray]]:
+        """
+        Load CVs with their titleEmbedding from database.
+        Uses the same embeddings that the recommendation system uses.
+
+        Returns:
+            List of (cv_id, cv_title, embedding) tuples
+        """
+        query = """
+            SELECT id, title, "titleEmbedding"
+            FROM cvs
+            WHERE "isMain" = true
+                AND title IS NOT NULL AND title != ''
+                AND "titleEmbedding" IS NOT NULL
+            LIMIT %s
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(query, (self.cv_limit,))
+            rows = cursor.fetchall()
+
+        import json as json_module
+        cvs = []
+        for row in rows:
+            if row["title"] and row["titleEmbedding"]:
+                emb = row["titleEmbedding"]
+                if isinstance(emb, str):
+                    emb = json_module.loads(emb)
+                cvs.append((row["id"], row["title"], np.array(emb, dtype=np.float32)))
+
+        logger.info(f"Loaded {len(cvs)} CVs with embeddings from database")
+        return cvs
+
     def build_job_title_index(self, jobs: List[Tuple[str, str]]) -> None:
         """
-        Build FAISS index from job titles.
+        Build FAISS index from job titles (legacy method).
 
         Args:
             jobs: List of (job_id, job_title) tuples
@@ -148,9 +363,38 @@ class GroundTruthGenerator:
 
         logger.info(f"Built FAISS index with {len(self.job_ids)} jobs, dimension={self.dimension}")
 
+    def build_job_combined_index(self, jobs: List[JobWithText]) -> None:
+        """
+        Build FAISS index from job combined texts (title + requirements).
+
+        Args:
+            jobs: List of JobWithText objects
+        """
+        # Store metadata
+        self.job_ids = [j.job_id for j in jobs]
+        self.job_titles = [j.title for j in jobs]
+        combined_texts = [j.combined_text for j in jobs]
+
+        # Generate embeddings from combined text
+        logger.info(f"Generating embeddings for {len(jobs)} jobs (title + requirements)...")
+        embeddings = self.embedding_service.get_embeddings_batch(
+            combined_texts,
+            batch_size=32,
+            show_progress=True
+        )
+
+        self.dimension = embeddings.shape[1]
+
+        # Build FAISS index (FlatIP for cosine similarity with normalized vectors)
+        logger.info("Building FAISS index...")
+        self.index = faiss.IndexFlatIP(self.dimension)
+        self.index.add(embeddings)
+
+        logger.info(f"Built FAISS index with {len(self.job_ids)} jobs, dimension={self.dimension}")
+
     def find_best_matching_job(self, cv_title: str) -> Tuple[str, str, float]:
         """
-        Find the most similar job for a CV based on title.
+        Find the most similar job for a CV based on title (legacy method).
 
         Args:
             cv_title: The CV title to match
@@ -176,13 +420,52 @@ class GroundTruthGenerator:
 
         return self.job_ids[idx], self.job_titles[idx], similarity
 
-    def generate(self) -> List[GroundTruthPair]:
+    def find_best_matching_job_combined(self, cv_combined_text: str) -> Tuple[str, str, float]:
+        """
+        Find the most similar job for a CV based on combined text (title + experience).
+
+        Args:
+            cv_combined_text: The CV combined text to match
+
+        Returns:
+            Tuple of (job_id, job_title, similarity_score)
+        """
+        if self.index is None:
+            raise ValueError("FAISS index not built. Call build_job_combined_index first.")
+
+        # Get CV combined text embedding
+        cv_embedding = self.embedding_service.get_embedding(cv_combined_text)
+        cv_embedding = cv_embedding.reshape(1, -1)
+
+        # Search for top-1 match
+        distances, indices = self.index.search(cv_embedding, 1)
+
+        if indices[0][0] == -1:
+            return "", "", 0.0
+
+        idx = indices[0][0]
+        similarity = float(distances[0][0])
+
+        return self.job_ids[idx], self.job_titles[idx], similarity
+
+    def generate(self, use_combined_text: bool = True) -> List[GroundTruthPair]:
         """
         Generate ground truth pairs.
+
+        Args:
+            use_combined_text: If True, use combined text (title + experience/requirements).
+                             If False, use title only (legacy behavior).
 
         Returns:
             List of GroundTruthPair objects
         """
+        if use_combined_text:
+            return self._generate_with_combined_text()
+        else:
+            return self._generate_with_title_only()
+
+    def _generate_with_title_only(self) -> List[GroundTruthPair]:
+        """Generate ground truth using title only (legacy method)."""
         # Load data
         logger.info("Loading CVs and Jobs from database...")
         cvs = self.load_cvs()
@@ -219,6 +502,46 @@ class GroundTruthGenerator:
                 ))
 
         logger.info(f"Generated {len(pairs)} ground truth pairs")
+        return pairs
+
+    def _generate_with_combined_text(self) -> List[GroundTruthPair]:
+        """Generate ground truth using combined text (title + experience/requirements)."""
+        # Load data with experience/requirements
+        logger.info("Loading CVs with experience and Jobs with requirements...")
+        cvs = self.load_cvs_with_experience()
+        jobs = self.load_jobs_with_requirements()
+
+        if not cvs:
+            logger.warning("No CVs found in database")
+            return []
+
+        if not jobs:
+            logger.warning("No jobs found in database")
+            return []
+
+        # Build FAISS index for jobs using combined text
+        self.build_job_combined_index(jobs)
+
+        # Find best matching job for each CV
+        logger.info("Finding best matching jobs for each CV (using combined text)...")
+        pairs = []
+
+        for cv in tqdm(cvs, desc="Matching CVs"):
+            if not cv.combined_text or not cv.combined_text.strip():
+                continue
+
+            job_id, job_title, similarity = self.find_best_matching_job_combined(cv.combined_text)
+
+            if job_id:
+                pairs.append(GroundTruthPair(
+                    cv_id=cv.cv_id,
+                    job_id=job_id,
+                    cv_title=cv.title,
+                    job_title=job_title,
+                    similarity=similarity
+                ))
+
+        logger.info(f"Generated {len(pairs)} ground truth pairs (combined text)")
         return pairs
 
     def save_to_csv(self, pairs: List[GroundTruthPair]) -> str:
@@ -310,12 +633,14 @@ class GroundTruthGenerator:
             logger.error(f"Failed to load index: {e}")
             return False
 
-    def run(self, save_index: bool = True) -> str:
+    def run(self, save_index: bool = True, use_combined_text: bool = True) -> str:
         """
         Run the full ground truth generation pipeline.
 
         Args:
             save_index: Whether to save the FAISS index for reuse
+            use_combined_text: If True, use combined text (title + experience/requirements).
+                             If False, use title only (legacy behavior).
 
         Returns:
             Path to the saved ground truth CSV file
@@ -326,10 +651,11 @@ class GroundTruthGenerator:
         logger.info(f"CV limit: {self.cv_limit}")
         logger.info(f"Job limit: {self.job_limit}")
         logger.info(f"Output path: {self.output_path}")
+        logger.info(f"Mode: {'COMBINED TEXT (title + experience/requirements)' if use_combined_text else 'TITLE ONLY'}")
         logger.info("=" * 50)
 
         # Generate pairs
-        pairs = self.generate()
+        pairs = self.generate(use_combined_text=use_combined_text)
 
         if not pairs:
             logger.warning("No ground truth pairs generated")

@@ -9,7 +9,27 @@
       "Bash(dir:*)",
       "Bash(ls:*)",
       "Bash(.venvScriptspython.exe -c \"\nimport pymongo\n\nclient = pymongo.MongoClient\\(''mongodb://localhost:27017''\\)\ndb = client[''job_recommendation'']\n\n# Count all jobs\ntotal_jobs = db.jobs.count_documents\\({}\\)\nprint\\(f''Total jobs in database: {total_jobs}''\\)\n\n# Check job statuses\npipeline = [\n    {''$group'': {''_id'': ''$status'', ''count'': {''$sum'': 1}}}\n]\nstatuses = list\\(db.jobs.aggregate\\(pipeline\\)\\)\nprint\\(f''Jobs by status:''\\)\nfor s in statuses:\n    print\\(f''  - {s[\"\"_id\"\"]}: {s[\"\"count\"\"]}''\\)\n\nclient.close\\(\\)\n\")",
-      "Bash(\".venv\\\\Scripts\\\\python.exe\" -c \"import pymongo; client = pymongo.MongoClient\\(''mongodb://localhost:27017''\\); db = client[''job_recommendation'']; print\\(''Total jobs:'', db.jobs.count_documents\\({}\\)\\); print\\(''CVs:'', db.cvs.count_documents\\({}\\)\\)\")"
+      "Bash(\".venv\\\\Scripts\\\\python.exe\" -c \"import pymongo; client = pymongo.MongoClient\\(''mongodb://localhost:27017''\\); db = client[''job_recommendation'']; print\\(''Total jobs:'', db.jobs.count_documents\\({}\\)\\); print\\(''CVs:'', db.cvs.count_documents\\({}\\)\\)\")",
+      "Bash(.venvScriptspython.exe:*)",
+      "Bash(\".venv\\\\Scripts\\\\python.exe\" -c \"import pymongo; client = pymongo.MongoClient\\(''mongodb://localhost:27017''\\); db = client[''job_recommendation'']; total = db.jobs.count_documents\\({}\\); with_emb = db.jobs.count_documents\\({''embedding'': {''$exists'': True, ''$ne'': None}}\\); print\\(f''Total jobs: {total}''\\); print\\(f''Jobs with embeddings: {with_emb}''\\)\")",
+      "Bash(powershell -Command \"cd ''c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service''; .\\\\.venv\\\\Scripts\\\\python.exe -c \"\"import pymongo; client = pymongo.MongoClient\\(''mongodb://localhost:27017''\\); db = client[''job_recommendation'']; total = db.jobs.count_documents\\({}\\); with_emb = db.jobs.count_documents\\({''embedding'': {''$exists'': True, ''$ne'': None}}\\); print\\(f''Total jobs: {total}''\\); print\\(f''Jobs with embeddings: {with_emb}''\\); total_cvs = db.cvs.count_documents\\({}\\); cvs_emb = db.cvs.count_documents\\({''embedding'': {''$exists'': True, ''$ne'': None}}\\); print\\(f''Total CVs: {total_cvs}''\\); print\\(f''CVs with embeddings: {cvs_emb}''\\)\"\"\")",
+      "Bash(cmd /c \"cd /d \"\"c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service\"\" && .venv\\\\Scripts\\\\python.exe -c \"\"import pymongo; client = pymongo.MongoClient\\(''mongodb://localhost:27017''\\); db = client[''job_recommendation'']; print\\(''Total jobs:'', db.jobs.count_documents\\({}\\)\\); print\\(''Jobs with embeddings:'', db.jobs.count_documents\\({''embedding'': {''$exists'': True}}\\)\\); print\\(''Total CVs:'', db.cvs.count_documents\\({}\\)\\); print\\(''CVs with embeddings:'', db.cvs.count_documents\\({''embedding'': {''$exists'': True}}\\)\\)\"\"\")",
+      "Bash(cmd /c \"cd /d c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service && .venv\\\\Scripts\\\\python.exe scripts/query_similar_jobs.py --help\")",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(del \"c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service\\\\scripts\\\\check_mongo_counts.py\")",
+      "Bash(more:*)",
+      "Bash(powershell:*)",
+      "Bash(cmd /c \"cd /d c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service && .venv\\\\Scripts\\\\python.exe scripts/visualize_with_labels.py\")",
+      "Bash(Select-String -NotMatch \"UserWarning\")",
+      "Bash(Select-String -Pattern \"INFO|seed|similar|CVs\")",
+      "Bash(cmd /c \"cd /d \"\"c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service\"\" && .venv\\\\Scripts\\\\python.exe -c \"\"import sys; sys.path.insert\\(0, ''.''\\); from scripts.database import DatabaseConnection; db = DatabaseConnection\\(\\); cursor = db.get_cursor\\(\\).__enter__\\(\\); cursor.execute\\(''SELECT column_name FROM information_schema.columns WHERE table_name = ''''jobs'''' ORDER BY ordinal_position''\\); cols = cursor.fetchall\\(\\); print\\(''Jobs table columns:''\\); [print\\(f''  - {c[0]}''\\) for c in cols]\"\"\")",
+      "Bash(cmd /c \"cd /d \"\"c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service\"\" && .venv\\\\Scripts\\\\python.exe scripts/check_industry.py\")",
+      "Bash(cmd /c \"cd /d c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service && .venv\\\\Scripts\\\\python.exe scripts\\\\check_industry.py\")",
+      "Bash(c:/Users/DaoDuyThong/StudioProjects/\"Recommend Service\"/.venv/Scripts/python.exe:*)",
+      "Bash(\"/mnt/c/Users/DaoDuyThong/StudioProjects/Recommend Service/.venv/Scripts/python.exe\" \"/mnt/c/Users/DaoDuyThong/StudioProjects/Recommend Service/scripts/check_industry.py\")",
+      "Bash(powershell.exe -Command \"& ''c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service\\\\.venv\\\\Scripts\\\\python.exe'' ''c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service\\\\scripts\\\\check_industry.py''\")",
+      "Bash(cmd /c \"cd /d c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service && .venv\\\\Scripts\\\\python.exe scripts/run_evaluation.py --compare\")",
+      "Bash(cmd /c:*)"
     ]
   }
 }

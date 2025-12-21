@@ -1,8 +1,12 @@
 """
 Generate Ground Truth for Evaluation.
 
-Uses sentence-transformers/paraphrase-multilingual-mpnet-base-v2 to embed titles
+Uses sentence-transformers/paraphrase-multilingual-mpnet-base-v2 to embed combined text
 and FAISS to find the most similar job for each CV.
+
+Combined text:
+- CV: title + experience descriptions
+- Job: title + requirement descriptions
 
 Output: CSV file with columns (cv_id, job_id, cv_title, job_title, similarity)
 
@@ -10,6 +14,7 @@ Usage:
     python scripts/generate_ground_truth.py
     python scripts/generate_ground_truth.py --cv-limit 2000 --job-limit 5000
     python scripts/generate_ground_truth.py --output ./evaluation_data/custom_ground_truth.csv
+    python scripts/generate_ground_truth.py --title-only  # Use only titles (legacy mode)
 """
 
 import sys
@@ -56,8 +61,8 @@ def main():
     parser.add_argument(
         "--cv-limit",
         type=int,
-        default=2000,
-        help="Maximum number of CVs to process (default: 2000)"
+        default=5000,
+        help="Maximum number of CVs to process (default: 5000)"
     )
     parser.add_argument(
         "--job-limit",
@@ -82,7 +87,14 @@ def main():
         action="store_true",
         help="Don't save FAISS index to disk"
     )
+    parser.add_argument(
+        "--title-only",
+        action="store_true",
+        help="Use only titles for matching (legacy mode). Default uses combined text (title + experience/requirements)"
+    )
     args = parser.parse_args()
+
+    mode = "TITLE ONLY" if args.title_only else "COMBINED TEXT (title + experience/requirements)"
 
     logger.info("=" * 70)
     logger.info("GROUND TRUTH GENERATION")
@@ -92,6 +104,7 @@ def main():
     logger.info(f"Job limit: {args.job_limit}")
     logger.info(f"Output path: {args.output}")
     logger.info(f"Index path: {args.index_path}")
+    logger.info(f"Mode: {mode}")
     logger.info("=" * 70)
 
     # Test connection first
@@ -109,7 +122,10 @@ def main():
         )
 
         # Run generation
-        output_path = generator.run(save_index=not args.no_save_index)
+        output_path = generator.run(
+            save_index=not args.no_save_index,
+            use_combined_text=not args.title_only
+        )
 
         if output_path:
             logger.info("")

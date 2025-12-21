@@ -6,7 +6,7 @@ from typing import List, Optional
 class CVData:
     id: str
     title: str
-    current_position: Optional[str] = None
+    summary: Optional[str] = None
     skills: List[str] = field(default_factory=list)
     experiences: List[str] = field(default_factory=list)
     title_embedding: Optional[List[float]] = None
@@ -19,7 +19,7 @@ class CVData:
         return cls(
             id=row["id"],
             title=row.get("title", ""),
-            current_position=row.get("currentPosition"),
+            summary=row.get("summary"),
             skills=[s["skillName"] for s in skills],
             experiences=[f"{e['title']} - {e.get('description', '')}" for e in experiences],
             title_embedding=row.get("titleEmbedding"),
@@ -33,6 +33,7 @@ class CVData:
 class JobData:
     id: str
     title: str
+    description: Optional[str] = None
     skills: List[str] = field(default_factory=list)
     requirements: List[str] = field(default_factory=list)
     title_embedding: Optional[List[float]] = None
@@ -45,6 +46,7 @@ class JobData:
         return cls(
             id=row["id"],
             title=row.get("title", ""),
+            description=row.get("description"),
             skills=[s["skillName"] for s in skills],
             requirements=[f"{r['title']} - {r.get('description', '')}" for r in requirements],
             title_embedding=row.get("titleEmbedding"),

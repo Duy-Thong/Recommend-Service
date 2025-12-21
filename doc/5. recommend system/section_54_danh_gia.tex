@@ -6,38 +6,19 @@
 
 \subsubsection{Quy mô dữ liệu}
 
-Việc đánh giá được thực hiện trên tập dữ liệu thực tế từ hệ thống, bao gồm 2.000 CV và 5.000 công việc. Bảng \ref{tab:dataset-stats} trình bày thống kê chi tiết về bộ dữ liệu đánh giá.
-
-\begin{table}[H]
-\centering
-\caption{Thống kê bộ dữ liệu đánh giá}
-\label{tab:dataset-stats}
-\begin{tabular}{|l|r|}
-\hline
-\textbf{Thông số} & \textbf{Giá trị} \\
-\hline
-Số lượng CV & 2.000 \\
-\hline
-Số lượng công việc & 5.000 \\
-\hline
-Tổng số cặp có thể & 10.000.000 \\
-\hline
-Tỷ lệ CV/công việc & 0,4 \\
-\hline
-\end{tabular}
-\end{table}
+Việc đánh giá được thực hiện trên tập dữ liệu thực tế từ hệ thống, bao gồm 2.000 CV và 14.000 công việc. 
 
 Dữ liệu được thu thập từ hệ thống thực tế, đảm bảo tính đa dạng về ngành nghề bao gồm công nghệ thông tin, kinh doanh, nhân sự, kế toán và các lĩnh vực khác. Các CV có mức độ kinh nghiệm khác nhau từ sinh viên mới ra trường đến chuyên gia nhiều năm kinh nghiệm.
 
 \subsubsection{Phương pháp tạo nhãn đánh giá}
 
-Do không có dữ liệu được gán nhãn thủ công từ người dùng thực, hệ thống sử dụng phương pháp so khớp dựa trên quy tắc làm cơ sở đánh giá. Phương pháp này kết hợp hai tiêu chí chính.
+Do không có dữ liệu được gán nhãn thủ công từ người dùng thực, hệ thống sử dụng phương pháp tạo nhãn tự động dựa trên độ tương đồng tiêu đề làm cơ sở đánh giá.
 
-Tiêu chí thứ nhất đánh giá độ tương đồng tiêu đề sử dụng bốn độ đo bao gồm Jaccard, độ tương đồng chuỗi, TF-IDF và độ tương đồng ngữ nghĩa. Một cặp CV-công việc được coi là khớp về tiêu đề nếu điểm tổng hợp vượt ngưỡng 0,6.
+Phương pháp sử dụng mô hình sentence-transformers/paraphrase-multilingual-mpnet-base-v2 để tạo biểu diễn vector cho tiêu đề CV và công việc. Đây là mô hình đa ngôn ngữ được huấn luyện trên tập dữ liệu paraphrase, có khả năng nắm bắt ngữ nghĩa tương đồng giữa các câu.
 
-Tiêu chí thứ hai đánh giá độ khớp kỹ năng thông qua năm mức độ: khớp chính xác, khớp từ đồng nghĩa, khớp theo mẫu, khớp một phần và khớp theo danh mục. Hệ thống sử dụng từ điển ánh xạ kỹ năng Việt-Anh với hơn 100 cặp từ và phân loại kỹ năng theo các nhóm như frontend, backend, devops, cơ sở dữ liệu, di động và dữ liệu.
+Quy trình tạo nhãn gồm bốn bước. Đầu tiên, hệ thống tải danh sách CV và công việc từ cơ sở dữ liệu. Tiếp theo, tiêu đề của tất cả công việc được chuyển đổi thành vector embedding và lưu vào chỉ mục FAISS IndexFlatIP để hỗ trợ tìm kiếm tương đồng cosine hiệu quả. Sau đó, với mỗi CV, hệ thống tìm công việc có tiêu đề tương đồng nhất thông qua tìm kiếm top-1 trên chỉ mục FAISS. Cuối cùng, các cặp CV-công việc cùng với điểm tương đồng được lưu thành tập ground truth.
 
-Một cặp CV-công việc được coi là phù hợp nếu thỏa mãn cả hai tiêu chí trên. Phương pháp này cho phép tạo nhãn tự động với chi phí thấp trong khi vẫn đảm bảo tính hợp lý của kết quả.
+Phương pháp này cho phép tạo nhãn tự động với chi phí thấp dựa trên giả định rằng CV có tiêu đề tương đồng về ngữ nghĩa với một công việc sẽ phù hợp với công việc đó. Sau khi tạo nhãn tự động, các cặp CV-công việc được kiểm tra thủ công bởi người đánh giá để loại bỏ các trường hợp ghép cặp không hợp lý và hậu xử lý để đảm bảo chất lượng của tập ground truth.
 
 \subsection{Độ đo đánh giá}
 \label{subsec:do-do-danh-gia}
@@ -158,7 +139,7 @@ Vòng lọc thứ ba so khớp kỹ năng tiếp tục cải thiện kết quả
 
 Tổng thể, việc thêm các vòng lọc cải thiện NDCG@10 thêm 17\% so với chỉ sử dụng tiêu đề, trong khi thời gian xử lý vẫn dưới 25 mili giây cho mỗi CV, đáp ứng yêu cầu về độ trễ của hệ thống gợi ý trực tuyến.
 
-\subsection{Kết luận}
+\subsubsection{Kết luận}
 \label{subsec:ket-luan-danh-gia}
 
 Kết quả đánh giá cho thấy hệ thống gợi ý việc làm sử dụng thuật toán lọc phân tầng kết hợp mô hình SimCSE trên nền tảng PhoBERT đạt hiệu quả cao trên bộ dữ liệu thực tế với 2.000 CV và 5.000 công việc. Thuật toán lọc phân tầng ba vòng cho phép kết hợp nhiều khía cạnh của sự phù hợp bao gồm tiêu đề, kinh nghiệm và kỹ năng, vượt trội so với các phương pháp cơ sở như gợi ý ngẫu nhiên và TF-IDF. Việc sử dụng chỉ mục FAISS với cấu hình IVFFlat đảm bảo tốc độ truy vấn nhanh trong khi vẫn duy trì độ chính xác cao, phù hợp với yêu cầu của ứng dụng thực tế.

@@ -148,8 +148,9 @@ class RecommendationService:
         content_hash: str
     ) -> None:
         """Generate and save embeddings for a job"""
-        # Generate title embedding
-        title_embedding = self.embedding_service.get_embedding(job.title)
+        # Generate title embedding (title + description)
+        title_text = f"{job.title} {job.description or ''}"
+        title_embedding = self.embedding_service.get_embedding(title_text)
 
         # Generate skills embedding
         skills_text = " ".join([(s.get("skillName") or "") for s in skills])
@@ -209,8 +210,8 @@ class RecommendationService:
         content_hash: str
     ) -> None:
         """Generate and save embeddings for a CV"""
-        # Generate title embedding
-        title_text = f"{cv.title} {cv.current_position or ''}"
+        # Generate title embedding (title + summary)
+        title_text = f"{cv.title} {cv.summary or ''}"
         title_embedding = self.embedding_service.get_embedding(title_text)
 
         # Generate skills embedding

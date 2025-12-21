@@ -74,6 +74,22 @@ def main():
         action="store_true",
         help="Show comparison with expected results from section_54_danh_gia.tex"
     )
+    parser.add_argument(
+        "--relaxed",
+        action="store_true",
+        help="Use relaxed matching based on title embedding similarity"
+    )
+    parser.add_argument(
+        "--similar-jobs",
+        action="store_true",
+        help="Use similar_jobs table for relaxed matching (recommended)"
+    )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.8,
+        help="Similarity threshold for relaxed matching (default: 0.8)"
+    )
     args = parser.parse_args()
 
     logger.info("=" * 70)
@@ -82,6 +98,12 @@ def main():
     logger.info(f"Database: {settings.database_url_clean}")
     logger.info(f"Ground truth: {args.ground_truth}")
     logger.info(f"Output: {args.output}")
+    if args.similar_jobs:
+        logger.info(f"Mode: SIMILAR JOBS TABLE (threshold={args.threshold})")
+    elif args.relaxed:
+        logger.info(f"Mode: RELAXED EMBEDDING MATCHING (threshold={args.threshold})")
+    else:
+        logger.info("Mode: EXACT ID MATCHING")
     logger.info("=" * 70)
 
     # Check if ground truth file exists
@@ -106,7 +128,16 @@ def main():
         )
 
         # Run evaluation
-        result = evaluator.run()
+        if args.similar_jobs:
+            logger.info(f"Running evaluation with SIMILAR JOBS TABLE (threshold={args.threshold})...")
+            result = evaluator.evaluate_with_similar_jobs(similarity_threshold=args.threshold)
+            evaluator.save_results(result)
+        elif args.relaxed:
+            logger.info(f"Running RELAXED evaluation with threshold={args.threshold}...")
+            result = evaluator.evaluate_relaxed(similarity_threshold=args.threshold)
+            evaluator.save_results(result)
+        else:
+            result = evaluator.run()
 
         # Show comparison if requested
         if args.compare:

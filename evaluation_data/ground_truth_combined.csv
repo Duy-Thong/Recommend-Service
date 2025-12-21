@@ -1,0 +1,101 @@
+cv_id,job_id,cv_title,job_title,similarity
+09917cdc-a1f9-4c7d-a670-b2defe11648b,8f9673f1-3ed5-4d01-958e-0462719e2d33,Kỹ Thuật Điện Tử _viễn Thông,Nhân Viên Kỹ Thuật Rạp,0.6518155336380005
+202f3a56-5226-4312-93fc-ea8ecacf559b,1fa6ad3d-3c79-418a-8285-e1aaab9da7ec,Nhân Viên Làm Hồ Sơ,Chuyên Viên Hành Chính Nhân Sự,0.7340725660324097
+9ede93b0-a56e-452c-b7d6-e5bd07d9056f,1f4d6a3f-bb03-4a5e-af89-8530402ab0ec,Dược Sĩ Nhà Thuốc,Trình Dược Viên - Khu Vực Kiên Giang,0.661246657371521
+681a79f5-61e7-448b-90e8-877a10ebd50f,10cacb3d-f343-4126-9f05-d79c5f02fcb3,Nhân Viên Kỹ Thuật,Trưởng Phòng Kĩ Thuật Tại Nhà Máy Hà Nam,0.7122394442558289
+064bab31-0c1d-4299-b81a-a352535264cf,a0f2f6ad-c749-4134-bfb8-4b27321635be,仓库会计(đang Tìm Việc),"Kế Toán Bán Hàng Kiêm Thu Ngân [ Mỹ Xuân, Tx. Phú Mỹ - Brvt]",0.7800657749176025
+b6c01191-d7f3-426d-81ca-fa646b9e93c3,10cacb3d-f343-4126-9f05-d79c5f02fcb3,Kỹ Sư Điều Khiển(đang Tìm Việc),Trưởng Phòng Kĩ Thuật Tại Nhà Máy Hà Nam,0.7537006139755249
+c8335412-7e15-43f1-92cc-fb21a7f51f5e,89d2d37b-673e-49fb-9441-7e2329539014,Nhân Viên Qa,Nhân Viên Quản Lý Chất Lương (Qlcl),0.8034753203392029
+c6dcd7fb-7157-4096-92da-187dc119de83,275e36e8-149a-40cd-a9b0-c107e96ba0d7,Nhân Viên Văn Phòng,Phó Phòng Tổ Chức Thi - Hồ Chí Minh,0.8024024963378906
+5b2ad81d-e89a-4e87-90af-474c4d588e45,d1da9229-079a-45c3-a996-5207ce6ccac5,Nhân Viên,Quản Lý Nhà Hàng Tại Việt Trì,0.7109870910644531
+77aa0085-5f4a-4794-928e-e73bc6d2f2a6,57a668cb-d7ec-419e-9315-0059883e0f42,Dược Sĩ Bán Thuốc,Dược Sỹ Nhà Thuốc Tại An Phước - Đồng Nai,0.7620018124580383
+99fe3177-8f61-4d6d-a8ab-f423e5c6c9e3,9b3872c6-38a7-4641-89d0-eb6d51d509c5,Phụ Bếp Bánh Kem,Bếp Trưởng,0.5629901885986328
+c5bc76f1-02f4-45a4-812c-ef1b60c0442a,10cacb3d-f343-4126-9f05-d79c5f02fcb3,Lao Động Phổ Thông,Trưởng Phòng Kĩ Thuật Tại Nhà Máy Hà Nam,0.6663507223129272
+ddc514ba-ba1f-47f8-9c76-f5ff6e2807b0,bd922fd8-f7fb-4396-b565-f2d637dcf201,Quản Lý Đơn Hàng,Nhân Viên Kế Toán Tại Lai Châu,0.7366453409194946
+89ff39a0-40fe-4392-a5cc-8de0ba13ef0d,909a4f26-855f-402d-9485-ccd0982f3457,Chuyên Viên Tư Vấn,Chuyên Viên Hỗ Trợ Khách Hàng & Tư Vấn Giải Pháp Tài Chính - Khu Vực Tphcm & Hà Nội,0.7708876729011536
+a784f828-c429-46bc-a3b5-21fa497c82c9,89d2d37b-673e-49fb-9441-7e2329539014,Công Nghệ Thực Phẩm,Nhân Viên Quản Lý Chất Lương (Qlcl),0.6387678384780884
+59eef66a-1e8d-440e-b55d-6ee8883cd850,b6ad6815-c71e-440e-a8a9-1804b7e44caa,Lập Trình Viên,Trưởng Bộ Phận Đánh Giá Và Quản Lý Chất Lượng Dự Án,0.6466162204742432
+7b896856-97e6-461a-a443-13ac933f2eeb,94c7e55a-7104-4949-9bcf-e0b39f6688dc,Thực Tập Sinh Kinh Doanh,Nhân Viên Kinh Doanh ( Lcb 8-12 Tr + Hoa Hồng Không Giới Hạn),0.6924906969070435
+c9a73993-c1c8-434f-8836-64ced90e267d,10cacb3d-f343-4126-9f05-d79c5f02fcb3,Kỹ Sư Tự Động Hóa,Trưởng Phòng Kĩ Thuật Tại Nhà Máy Hà Nam,0.7482643127441406
+2072b4f0-5a1e-4ead-842e-395aa910d7e8,f10a1721-3f9d-42ee-a60a-ef82f000a797,Nhan Vien Qc-qa,QA (Từ 1 Năm Kinh Nghiệm),0.6747289896011353
+d4efc6fc-b17a-46a6-888d-db6d0105240d,1f4d6a3f-bb03-4a5e-af89-8530402ab0ec,"Nhân Viên Y Tế, Y Dược",Trình Dược Viên - Khu Vực Kiên Giang,0.7370229959487915
+7657e495-9bf8-421d-b52c-e9fbeb0e2acd,df70af6b-9e8a-44da-8466-5a5c27c98fa5,Customer Support,Chăm Sóc Khách Hàng Và Tư Vấn Bán Hàng (Lương 6 - 8 Triệu + Hoa Hồng),0.5850294828414917
+210128d2-b4e3-4dcc-a2ec-ceb468d21d20,4b470824-0055-4ff2-8b20-c2685cf464a2,Phục Vụ Và Thu Ngân(đang Tìm Việc),Giám Sát Vận Hành Dịch Vụ Cgv Cinemas,0.6630944609642029
+f18a664b-7e00-4f86-824f-4a855ef55ec1,f53de757-2d01-495e-8f2b-d673c2a92682,Nhân Viên Phục Vụ,Nhân Viên Phục Vụ - Waiter,0.6366022825241089
+131066a3-fac7-41fd-802a-fde20ad97526,b89b540e-86a0-409c-9255-cc54e2c91f65,Quản Lý Ch-kv,Cửa Hàng Trưởng Khu Vực Hà Nội,0.618733286857605
+21793531-f753-45ba-91c2-cbbd9522f0df,c448de37-d70a-44f5-9936-36480c342330,Nhân Viên Thu Mua,Trưởng Phòng Thu Mua,0.6543424129486084
+627df986-ed6f-4134-a2c0-1d2d0149d5f4,5ec286c3-e6c7-4091-b3f6-011c5e43b049,Hướng Dẫn Viên Du Lịch(đang Tìm Việc),Chuyên Viên Sales Tours Tour Thị Trường Nội Địa,0.6934750080108643
+b5f3e39c-8032-4daa-b474-63152f916e3b,60633856-3646-407e-bc92-badcf55ff9bd,Nhân Viên,Quản Lý Nhà Hàng - Lương Không Giới Hạn,0.6578706502914429
+c30138fa-2008-4ccc-b6c7-91a87200507e,0e9a4136-d22c-4047-9227-53167b6be54d,Lập Trình Viên Php,Lập Trình Viên PHP (Linkhay),0.7320323586463928
+a5307f6d-1c8d-4da0-ac5c-dda90936e8f9,be256753-bffb-4f15-821c-6c4799986d44,Kỹ Thuật Điện,Kỹ Sư Điện - Điện Lạnh,0.4548403322696686
+d4e348f0-39df-4963-819b-ab68c3ea14e3,071b1ff7-c36b-4ecb-aa9c-5e38870c5613,Nhân Viên Telesales,Nhân Viên Telesale - Tư Vấn - Trực Điện Thoại,0.792731761932373
+55c9fb23-2696-4915-91b2-1a6be7e80c95,943931a3-15d8-4f24-b6db-c8a23a58deb7,Sinh Viên Trường Đại Học Văn Hiến Ngành: Marketinggpa: 2.95/4.0,Nhân Viên Marketing Google Ads (Không Y/C Kinh Nghiệm),0.6615796089172363
+2f473a31-3d44-455b-bd04-a5b8a79bdd9d,10cacb3d-f343-4126-9f05-d79c5f02fcb3,Kỹ Thuật Viên Cơ Khí Động Lực&nbsp;,Trưởng Phòng Kĩ Thuật Tại Nhà Máy Hà Nam,0.6559990048408508
+065bca3d-a976-442f-a58f-309a118c8fff,919b8b30-cdf8-46c4-9fdb-af8b011c3746,Nhân Viên Quản Trị Kinh Doanh,Nhân Viên Kinh Doanh,0.7553904056549072
+d3ac0748-b68d-4982-b320-169273fc592e,5ec286c3-e6c7-4091-b3f6-011c5e43b049,Hướng Dẫn Vie·,Chuyên Viên Sales Tours Tour Thị Trường Nội Địa,0.6821869015693665
+15a35a57-d352-46fc-8308-bd5b9e2927f9,10cacb3d-f343-4126-9f05-d79c5f02fcb3,Nhân Viên Kho(đang Tìm Việc),Trưởng Phòng Kĩ Thuật Tại Nhà Máy Hà Nam,0.6719611883163452
+62695a0f-db4b-460b-89d4-6bfae1344a7d,919b8b30-cdf8-46c4-9fdb-af8b011c3746,Nhân viên hàng hóa,Nhân Viên Kinh Doanh,0.6918802261352539
+8b405192-0678-431c-af0d-7cb261ecb9de,467f5db5-b36d-42a4-921c-8f21a7c01984,Sinh Viên,Thực Tập Sinh Content Marketing,0.7038205862045288
+5336e3b9-7322-4991-abdd-81d755e905aa,37835224-6036-4a33-9886-ae3559fa4bf0,Nhân Viên Hcns,Nhân Viên Kinh Doanh (Sales Executive (Ta & Cooperate Segment)),0.691814124584198
+5f8a0198-bdac-4d64-8f19-c7300a75407c,919b8b30-cdf8-46c4-9fdb-af8b011c3746,Nhân Viên Pha Chế Đồ Uống,Nhân Viên Kinh Doanh,0.7149524688720703
+9a418285-82af-45d1-8206-116e00ccbffa,01910493-ad6f-4106-8888-f4f5b5cf7ef9,Vị Trí Ứng Tuyển : Nhân Viên Sales Marketng,Nhân Viên Bán Hàng - Nguyễn Kim Quận 1 (Ko Yc Kinh Nghiệm),0.7731493711471558
+71f8933e-d123-40cc-af53-f6629eca3c1c,2f55cf12-5312-431c-9fcf-ed02d348a2c4,Nhân Viên Kế Toán,"Nhân Viên Kế Toán Quản Trị Làm Việc Tại Mê Linh Hà Nội, Môi Trường Làm Việc Năng Động, Thưởng Cao",0.7716481685638428
+2f997de3-76f6-47b7-b09a-fe341ccc0446,30e625c2-6fcb-476b-b3c7-83f43366f6cc,Nhân Viên Y Tế,Chuyên Viên Kinh Doanh Dịch Vụ Y Tế,0.65388023853302
+5758f52e-1578-430a-bc51-40b5aa6487c7,9b3872c6-38a7-4641-89d0-eb6d51d509c5,Nhân Viên Bếp,Bếp Trưởng,0.6722584962844849
+e4d93cc9-c5ca-4519-9353-0b5d80136444,909a4f26-855f-402d-9485-ccd0982f3457,Nhân Viên Kinh Doanh,Chuyên Viên Hỗ Trợ Khách Hàng & Tư Vấn Giải Pháp Tài Chính - Khu Vực Tphcm & Hà Nội,0.7594305276870728
+c16ed18f-4401-449c-8c2e-0ce0f889f2a6,30e50492-7faa-4480-ba94-64f823b43d74,Sinh Viên Mới Ra Trường,Thực Tập Sinh Phân Tích Từ Khoá Chủ Đề Pháp Luật,0.6374250650405884
+95b20cc7-0384-4f9a-8eb4-84939afd2e76,0bd5509d-a888-49fd-aae5-bbf17a0161a6,Impex Staff,Kế Toán Trưởng Xuất Nhập Khẩu (Ra Tết Nhận Việc) - Thanh Hoá,0.6161705255508423
+366da991-941c-452c-9434-094d30e37e9f,c0f01408-45c4-4077-b530-21bfdcc32250,Nhân Viên Hành Chính Nhân Sự,Trưởng Phòng Hành Chính Nhân Sự,0.7661769390106201
+56d388af-ccdd-4fd0-8125-5a213689885d,5322e62b-d0f9-4d78-85d7-09a960ce0bf3,Lê Thảo Vy,Chuyên Viên Đào Tạo Nội Bộ,0.6501211524009705
+b896f09e-db71-441a-a87a-5dd597c5e779,d1da9229-079a-45c3-a996-5207ce6ccac5,Nhân Viên,Quản Lý Nhà Hàng Tại Việt Trì,0.7477748394012451
+4aeebee8-ceca-4cc3-9a9d-6edd7b094cfb,4c63352f-fa28-4a8b-8243-a680f17b956e,Thực Tập Sinh Công Nghệ Thông Tin,Nhân Viên Trực Page (Part Time),0.6660556793212891
+d113093f-f836-4ab5-8c51-71aacd60f394,63dd1e34-e8b7-49fb-88e0-ed008bd78464,Nhân Viên Chăm Sóc Khách Hàng,Nhân Viên Kinh Doanh (Các Tỉnh Phía Nam),0.7190080881118774
+16bafbf2-7b38-4605-b307-b38085013664,89d2d37b-673e-49fb-9441-7e2329539014,Qc,Nhân Viên Quản Lý Chất Lương (Qlcl),0.7570329904556274
+166d2b1b-b78f-44cf-9d1f-25fe2c5234ef,3384c604-6aa1-4a0b-a334-d7515bf52053,Nhân Viên Kĩ Thuật Điện-điện Tử(đang Tìm Việc),Nhân Viên Phát Triển Thị Trường,0.7130964398384094
+d956bd5b-b399-404c-8799-45bbe74fb3bd,bd922fd8-f7fb-4396-b565-f2d637dcf201,Kế Toán Viên,Nhân Viên Kế Toán Tại Lai Châu,0.8003566265106201
+2cacb7f9-681b-4cf2-9379-787cea35c0f2,4cae1035-5d6f-4276-8f1f-1f9119a44571,Nhân Viên Thống Kê,Nhân Viên Điều Phối Đơn Hàng,0.6954681873321533
+2b32739c-3e40-4e56-b793-757816e80a39,f48f846f-879a-4698-af30-deb62ed81877,Chuyên Viên Marketing,Nhân Viên Marketing,0.7023720145225525
+bb0f087e-0982-48e6-bd0f-47b65bfe2b90,919b8b30-cdf8-46c4-9fdb-af8b011c3746,Nhân Viên Kho,Nhân Viên Kinh Doanh,0.6678344011306763
+a108681c-2106-4d45-ad01-24e2ba44e28a,b09088e5-1f4e-44b3-bb75-5a7507d5193f,Lái Xe B2,Nhân Viên Kinh Doanh Xe Tải Hyundai (Nam) Tại Thuận An - Bình Dương - Thu Nhập Không Giới Hạn,0.5720453262329102
+53e23db1-5eaa-406d-9d14-c913107d8258,2f55cf12-5312-431c-9fcf-ed02d348a2c4,Quản trị viên,"Nhân Viên Kế Toán Quản Trị Làm Việc Tại Mê Linh Hà Nội, Môi Trường Làm Việc Năng Động, Thưởng Cao",0.7478272318840027
+9d1af96b-067c-47ff-9683-5cfac22f0c2f,98c792d3-dadf-4854-a6fb-988a4d18d3e8,Nhân Viên Marketing,Brand Marketing Manager,0.822284460067749
+705611f6-8f3b-4f8a-bf07-430d871aeae0,3384c604-6aa1-4a0b-a334-d7515bf52053,Nhân Viên It Phần Cứng,Nhân Viên Phát Triển Thị Trường,0.6278989315032959
+b5801ce7-02e8-4f4a-bc51-d7a3fa8bc698,4c63352f-fa28-4a8b-8243-a680f17b956e,Trực Page Parttime(đang Tìm Việc),Nhân Viên Trực Page (Part Time),0.7344995737075806
+b0bcb554-60b2-495c-af52-cc7c3e1faa34,919b8b30-cdf8-46c4-9fdb-af8b011c3746,Nhân Viên Bán Hàng(đang Tìm Việc),Nhân Viên Kinh Doanh,0.7589473724365234
+752e0841-9d21-4bb5-a9d9-d5b2ec34a70c,4223c86f-a55a-4b53-9a45-1f8b61df6475,Dịch,Thực Tập Sinh Truyền Thông Nội Bộ,0.5706996321678162
+dd35d51b-e4ce-49e2-9e9d-7161cd9e9e81,4e1f45cf-cc39-46ca-b06d-5fcb029de0e2,Nhân viên thống kê,Chuyên Viên Quan Hệ Khách Hàng Cá Nhân - Khu Vực Miền Bắc,0.6422042846679688
+ff82d56c-e0fb-4fe3-97e5-c3525f1975e7,10cacb3d-f343-4126-9f05-d79c5f02fcb3,Vận Hành Máy,Trưởng Phòng Kĩ Thuật Tại Nhà Máy Hà Nam,0.637888491153717
+659275a9-a3a7-471a-aa5f-7eb96c49c117,919b8b30-cdf8-46c4-9fdb-af8b011c3746,Bartender và barista,Nhân Viên Kinh Doanh,0.6065399646759033
+dfa6b616-1b2e-4844-8ebc-ac16196057db,57a668cb-d7ec-419e-9315-0059883e0f42,Dược Sĩ,Dược Sỹ Nhà Thuốc Tại An Phước - Đồng Nai,0.6632624864578247
+c0a183f9-2636-43fe-a5af-6a526477c2e4,a9d5f902-3828-4e6a-b39c-ccb82023cc00,Nhân Viên Phòng Hàng,Cửa Hàng Trưởng,0.6662137508392334
+f886307b-96d1-4b39-a999-effbfb6c5266,dff5e59a-72b4-4be9-b219-8009718ad3f9,Nhân Viên Bán Hàng,Nhân Viên Kinh Doanh Nhượng Quyền Thương Hiệu,0.7800173759460449
+1613a042-cd82-49d1-9212-c534e2c05abb,fe759f7b-ac96-4983-8871-963455190f15,Nhân Viên Kỹ Thuật Me,Trưởng Phòng Cơ Điện (Nhà Máy Cẩm Giàng - Hải Dương),0.7308430671691895
+2139d3a4-9aa9-4676-8768-9de7d0510f5c,919b8b30-cdf8-46c4-9fdb-af8b011c3746,Nhân Viên Kinh Doanh Xe,Nhân Viên Kinh Doanh,0.8221583366394043
+fb1a4d0a-da98-434e-ae36-2e33aa4a1846,a7b10050-ca86-4210-a3c3-0abcad39e304,Giám Đốc Marketing(đang Tìm Việc),Trưởng Phòng Marketing (Thu Nhập Từ 20-28 Triệu),0.7834053635597229
+dfbbb8c1-06ab-44e2-8292-cb01c60a2fdc,c0f01408-45c4-4077-b530-21bfdcc32250,Nhân Viên An Ninh,Trưởng Phòng Hành Chính Nhân Sự,0.5912536382675171
+6e09472a-a199-4861-956b-521b421e0b1d,01910493-ad6f-4106-8888-f4f5b5cf7ef9,Nhân Viên Bán Hàng,Nhân Viên Bán Hàng - Nguyễn Kim Quận 1 (Ko Yc Kinh Nghiệm),0.7018951773643494
+728b580d-2ca6-40d6-8b6e-a6ffced9d9c0,5d5a6fb7-ed3b-4087-83c3-dc063bb21661,Tiếp thị kỹ thuật số,Kiểm Soát Viên Vận Hành Thẻ,0.7191106081008911
+414fcbcc-35e3-4dab-bfde-f39df9f1872e,9c8f8803-942d-4ad0-b4c9-f7d4f6d53bc7,Phụ Hồ,Nhân Viên Thi Công Điện Nước,0.6981935501098633
+b3f4d81e-a746-43bc-b7ce-451388afc9d3,e0a59dbe-f752-4c09-94a2-9a846ffd4866,Nhân Viên Kế Toán,Nhân Viên Kế Toán Tổng Hợp 13-18 Triệu ( Mảng Sản Xuất Gỗ ),0.7272578477859497
+2f041b15-74f7-492b-97a3-ff4d3c02aeed,d9f8e11e-69b8-4c30-b705-a2a96dcac935,Chuyên Viên Pccc,"Cán Bộ Kỹ Thuật Hồ Sơ (Pccc, Cơ Điện)",0.6936038732528687
+03e0c94e-7f56-4a76-aed2-17d6fee3c582,b89b540e-86a0-409c-9255-cc54e2c91f65,Quản Lý Cửa Hàng,Cửa Hàng Trưởng Khu Vực Hà Nội,0.7533532381057739
+4d0bdeec-2d69-444f-818e-4045312e80ea,b89b540e-86a0-409c-9255-cc54e2c91f65,Nhân Viên Kho,Cửa Hàng Trưởng Khu Vực Hà Nội,0.6723494529724121
+27cd4af3-6a6a-4ab9-949f-515e65f4895c,6a361adc-a33d-4490-b660-6638c8a4ffd7,Nhân Viên Chăm Sóc Khách Hàng,Nhân Viên Chăm Sóc Khách Hàng Biết Tiếng Anh - Remote,0.6387553215026855
+bbbd701a-a482-4194-9534-6111c1f9acdf,40ba85e0-de94-414d-9fcc-9a1690141508,Cử Nhân Ngữ Văn,Biên Tập Viên Ngữ Văn,0.7187895774841309
+1a4951c8-148d-4f8e-8f8d-f8743e2e81fa,b89b540e-86a0-409c-9255-cc54e2c91f65,Kế Toán Kho,Cửa Hàng Trưởng Khu Vực Hà Nội,0.5691485404968262
+cd803a83-64bb-4746-9f99-3fc067de83b7,ff3ce2db-4ed2-4307-9780-55c1aaadc87d,Điêu Dưỡng Viên,Phụ Tá Nha Khoa,0.6857584714889526
+18b61539-45b2-4224-afa6-42ec5b45038b,f0e82bf0-f493-4d8e-bc17-2a9ea83a0ce5,Trang web SEO,Thực Tập Sinh Viết Bài Content Chuẩn SEO,0.7215093374252319
+0987d0d3-72ba-4140-bcc6-32dc38c7044e,d926913f-fa3e-4703-9d92-78184e73f6ec,Giáo Viên,Chuyên Viên Điều Phối Giáo Viên Nước Ngoài,0.5864864587783813
+68b7619d-0cd8-468a-a58f-86726df35df2,919b8b30-cdf8-46c4-9fdb-af8b011c3746,Kỹ Sư Công Nghệ Thực Phẩm,Nhân Viên Kinh Doanh,0.7005953788757324
+2a517246-5e9b-42e2-8997-46f55f4c2239,9be1ad58-0fbd-4637-93d1-4dafebc2fd19,Nhân Viên An Toàn(đang Tìm Việc),Nhân Viên Kỹ Thuật Bảo Trì Tòa Nhà,0.6985061764717102
+ec7c4a20-7cb4-46de-9286-0f7dc142469d,b89b540e-86a0-409c-9255-cc54e2c91f65,Nhân Viên Vận Hành Kho,Cửa Hàng Trưởng Khu Vực Hà Nội,0.7013583183288574
+69ca397e-3ff6-4f0b-bfd9-752e759eb05c,275e36e8-149a-40cd-a9b0-c107e96ba0d7,Nhân Viên Hành Chính Văn Phòng,Phó Phòng Tổ Chức Thi - Hồ Chí Minh,0.7345645427703857
+c0b16b96-c516-48ff-a444-20a88ef4286c,881ea221-89c9-44e8-bd8b-6366edd38245,Thực Tập Sinh Pháp Chế,Chuyên Viên Pháp Chế,0.7773608565330505
+dc8982b1-c138-406c-b097-e434b5c2031a,d1da9229-079a-45c3-a996-5207ce6ccac5,Bếp(đang Tìm Việc),Quản Lý Nhà Hàng Tại Việt Trì,0.7078925371170044
+fb0feab6-0a71-4c07-baee-507d7d2ee8d9,4cae1035-5d6f-4276-8f1f-1f9119a44571,Nhân Viên Thủ Kho,Nhân Viên Điều Phối Đơn Hàng,0.7200089693069458
+bd599553-a8a3-4461-aaf3-0c5343f825b7,78ec3893-ff5e-4c42-8875-ed0384011960,Nhân Viên Trắc Đạc,Kỹ Sư Kiểm Soát Khối Lượng,0.6787669062614441
+849734f8-8f1f-46c3-a63d-1ce7ad3f893c,6895f9f5-cb7e-416e-a355-ed9c44847cf6,Chuyên gia tuyển dụng,Nhân Viên Tuyển Dụng HR,0.6718406081199646
+6fd1c9af-8ef9-4262-a312-a11608d34898,4dcad7b0-44d5-405b-a382-21e6191d3fb9,Trợ Lý Phiên Dịch(đang Tìm Việc),Business Assistant (Internship),0.6788450479507446
+8fcb3177-bf50-4ede-86d3-2bff4ec0c984,26727242-caa4-4060-b24f-77236ca882fd,Thực Tập Sinh Kế Toán(đang Tìm Việc),Thực Tập Sinh Kế Toán - Có Lương Hỗ Trợ,0.7867656946182251
+b6e96944-5cfc-4b6e-918d-80beaf17079b,3a855eee-0f1f-4659-9712-b20eab7e8816,Tiếp thị kỹ thuật số,Trưởng Phòng Marketing,0.8490975499153137
+a17dad90-581c-42b1-84a0-5c53e54eee99,881ea221-89c9-44e8-bd8b-6366edd38245,Pháp Chế Khối Khách Hàng Doanh Nghiệp(đang Tìm Việc),Chuyên Viên Pháp Chế,0.7264371514320374

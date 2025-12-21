@@ -22,11 +22,14 @@ class EvaluationResult:
     mrr: float
     ndcg_at_5: float
     ndcg_at_10: float
+    ndcg_at_30: float
     hit_rate_at_5: float
     hit_rate_at_10: float
+    hit_rate_at_30: float
     num_queries: int
     num_hits_at_5: int
     num_hits_at_10: int
+    num_hits_at_30: int
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -34,11 +37,14 @@ class EvaluationResult:
             "mrr": self.mrr,
             "ndcg_at_5": self.ndcg_at_5,
             "ndcg_at_10": self.ndcg_at_10,
+            "ndcg_at_30": self.ndcg_at_30,
             "hit_rate_at_5": self.hit_rate_at_5,
             "hit_rate_at_10": self.hit_rate_at_10,
+            "hit_rate_at_30": self.hit_rate_at_30,
             "num_queries": self.num_queries,
             "num_hits_at_5": self.num_hits_at_5,
-            "num_hits_at_10": self.num_hits_at_10
+            "num_hits_at_10": self.num_hits_at_10,
+            "num_hits_at_30": self.num_hits_at_30
         }
 
     def __str__(self) -> str:
@@ -48,11 +54,14 @@ class EvaluationResult:
             f"  MRR:           {self.mrr:.4f}\n"
             f"  NDCG@5:        {self.ndcg_at_5:.4f}\n"
             f"  NDCG@10:       {self.ndcg_at_10:.4f}\n"
+            f"  NDCG@30:       {self.ndcg_at_30:.4f}\n"
             f"  Hit Rate@5:    {self.hit_rate_at_5:.4f}\n"
             f"  Hit Rate@10:   {self.hit_rate_at_10:.4f}\n"
+            f"  Hit Rate@30:   {self.hit_rate_at_30:.4f}\n"
             f"  Queries:       {self.num_queries}\n"
             f"  Hits@5:        {self.num_hits_at_5}\n"
-            f"  Hits@10:       {self.num_hits_at_10}"
+            f"  Hits@10:       {self.num_hits_at_10}\n"
+            f"  Hits@30:       {self.num_hits_at_30}"
         )
 
 
@@ -261,33 +270,41 @@ class EvaluationMetrics:
                 mrr=0.0,
                 ndcg_at_5=0.0,
                 ndcg_at_10=0.0,
+                ndcg_at_30=0.0,
                 hit_rate_at_5=0.0,
                 hit_rate_at_10=0.0,
+                hit_rate_at_30=0.0,
                 num_queries=0,
                 num_hits_at_5=0,
-                num_hits_at_10=0
+                num_hits_at_10=0,
+                num_hits_at_30=0
             )
 
         # Calculate MRR
         mrr = cls.mrr(ground_truth, predictions)
 
-        # Calculate NDCG@5 and NDCG@10
+        # Calculate NDCG@5, NDCG@10, and NDCG@30
         ndcg_at_5 = cls.ndcg(ground_truth, predictions, k=5)
         ndcg_at_10 = cls.ndcg(ground_truth, predictions, k=10)
+        ndcg_at_30 = cls.ndcg(ground_truth, predictions, k=30)
 
-        # Calculate Hit Rate@5 and Hit Rate@10
+        # Calculate Hit Rate@5, Hit Rate@10, and Hit Rate@30
         hit_rate_at_5, num_hits_5 = cls.hit_rate_at_k(ground_truth, predictions, k=5)
         hit_rate_at_10, num_hits_10 = cls.hit_rate_at_k(ground_truth, predictions, k=10)
+        hit_rate_at_30, num_hits_30 = cls.hit_rate_at_k(ground_truth, predictions, k=30)
 
         result = EvaluationResult(
             mrr=mrr,
             ndcg_at_5=ndcg_at_5,
             ndcg_at_10=ndcg_at_10,
+            ndcg_at_30=ndcg_at_30,
             hit_rate_at_5=hit_rate_at_5,
             hit_rate_at_10=hit_rate_at_10,
+            hit_rate_at_30=hit_rate_at_30,
             num_queries=len(ground_truth),
             num_hits_at_5=num_hits_5,
-            num_hits_at_10=num_hits_10
+            num_hits_at_10=num_hits_10,
+            num_hits_at_30=num_hits_30
         )
 
         return result
