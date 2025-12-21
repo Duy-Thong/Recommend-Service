@@ -387,28 +387,16 @@ class RecommendationService:
             return 0
 
         if self.use_faiss:
-            # Try to load existing shared FAISS index first
+            # Always rebuild FAISS index to ensure it matches current jobs in DB
+            logger.info("Building FAISS index from current jobs")
+            self.similarity_service.build_index(jobs_with_embeddings)
+
+            # Save the index for future use
             try:
-                logger.info("Attempting to load shared FAISS index")
-                self.similarity_service.load_index()
-
-                # Verify loaded index has data
-                if self.similarity_service.index is not None and self.similarity_service.job_ids:
-                    logger.info(f"Successfully loaded shared FAISS index with {len(self.similarity_service.job_ids)} jobs")
-                else:
-                    raise ValueError("Loaded index is empty")
-
-            except Exception as e:
-                logger.warning(f"Failed to load shared FAISS index: {e}")
-                logger.info("Building new FAISS index from current jobs")
-                self.similarity_service.build_index(jobs_with_embeddings)
-
-                # Save the index for future use
-                try:
-                    self.similarity_service.save_index()
-                    logger.info("FAISS index saved successfully")
-                except Exception as save_error:
-                    logger.warning(f"Failed to save FAISS index: {save_error}")
+                self.similarity_service.save_index()
+                logger.info("FAISS index saved successfully")
+            except Exception as save_error:
+                logger.warning(f"Failed to save FAISS index: {save_error}")
 
         # Build jobs_dict for cascade filtering
         jobs_dict = {job.id: job for job in jobs_with_embeddings}

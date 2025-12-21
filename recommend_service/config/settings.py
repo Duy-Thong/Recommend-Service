@@ -20,7 +20,7 @@ class Settings:
     )
 
     # Recommendation settings
-    top_k_jobs: int = int(os.getenv("TOP_K_JOBS", "20"))
+    top_k_jobs: int = int(os.getenv("TOP_K_JOBS", "30"))
 
     # Cascade filtering settings
     use_cascade_filtering: bool = os.getenv("USE_CASCADE_FILTERING", "true").lower() == "true"

@@ -1,17 +1,17 @@
 {
-  "timestamp": "2025-12-21T01:49:41.100954",
+  "timestamp": "2025-12-21T22:27:53.849691",
   "ground_truth_path": "evaluation_data\\ground_truth.csv",
   "results": {
-    "mrr": 0.22210363534684335,
-    "ndcg_at_5": 0.21237686361665073,
-    "ndcg_at_10": 0.26902975921997463,
-    "ndcg_at_30": 0.3506425884370472,
-    "hit_rate_at_5": 0.314,
-    "hit_rate_at_10": 0.488,
-    "hit_rate_at_30": 0.8275,
-    "num_queries": 2000,
-    "num_hits_at_5": 628,
-    "num_hits_at_10": 976,
-    "num_hits_at_30": 1655
+    "mrr": 0.9289158756923779,
+    "ndcg_at_5": 0.9465845075710783,
+    "ndcg_at_10": 0.9533595291744119,
+    "ndcg_at_30": 0.9645243311482838,
+    "hit_rate_at_5": 0.9811076604554866,
+    "hit_rate_at_10": 0.9912008281573499,
+    "hit_rate_at_30": 0.9968944099378882,
+    "num_queries": 3864,
+    "num_hits_at_5": 3791,
+    "num_hits_at_10": 3830,
+    "num_hits_at_30": 3852
   }
 }
