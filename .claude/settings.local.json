@@ -29,7 +29,9 @@
       "Bash(\"/mnt/c/Users/DaoDuyThong/StudioProjects/Recommend Service/.venv/Scripts/python.exe\" \"/mnt/c/Users/DaoDuyThong/StudioProjects/Recommend Service/scripts/check_industry.py\")",
       "Bash(powershell.exe -Command \"& ''c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service\\\\.venv\\\\Scripts\\\\python.exe'' ''c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service\\\\scripts\\\\check_industry.py''\")",
       "Bash(cmd /c \"cd /d c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service && .venv\\\\Scripts\\\\python.exe scripts/run_evaluation.py --compare\")",
-      "Bash(cmd /c:*)"
+      "Bash(cmd /c:*)",
+      "Bash(\"c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service\\\\.venv\\\\Scripts\\\\python.exe\":*)",
+      "Bash(\"c:\\\\Users\\\\DaoDuyThong\\\\StudioProjects\\\\Recommend Service\\\\.venv\\\\Scripts\\\\python.exe\" -c:*)"
     ]
   }
 }

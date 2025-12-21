@@ -4,9 +4,9 @@ Generate Ground Truth for Evaluation.
 Uses sentence-transformers/paraphrase-multilingual-mpnet-base-v2 to embed combined text
 and FAISS to find the most similar job for each CV.
 
-Combined text:
-- CV: title + experience descriptions
-- Job: title + requirement descriptions
+Combined text (consistent with recommendation system):
+- CV: title + summary
+- Job: title + description
 
 Output: CSV file with columns (cv_id, job_id, cv_title, job_title, similarity)
 
@@ -90,11 +90,11 @@ def main():
     parser.add_argument(
         "--title-only",
         action="store_true",
-        help="Use only titles for matching (legacy mode). Default uses combined text (title + experience/requirements)"
+        help="Use only titles for matching (legacy mode). Default uses combined text (title + summary/description)"
     )
     args = parser.parse_args()
 
-    mode = "TITLE ONLY" if args.title_only else "COMBINED TEXT (title + experience/requirements)"
+    mode = "TITLE ONLY" if args.title_only else "COMBINED TEXT (title + summary/description)"
 
     logger.info("=" * 70)
     logger.info("GROUND TRUTH GENERATION")

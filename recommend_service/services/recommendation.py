@@ -114,16 +114,31 @@ class RecommendationService:
         return stats
 
     def _load_and_embed_jobs(self) -> List[JobData]:
-        """Load jobs from DB and generate embeddings if needed"""
+        """Load jobs from DB and generate embeddings if needed (batch optimized)"""
         jobs_data = []
-        raw_jobs = self.job_repo.get_active_jobs()
+        jobs_to_embed = []  # (job, skills, requirements, content_hash)
 
+        # Batch load all data in 3 queries instead of N*2 queries
+        logger.info("Loading all jobs data...")
+        raw_jobs = self.job_repo.get_active_jobs()
+        logger.info(f"Loaded {len(raw_jobs)} jobs")
+
+        logger.info("Loading all job skills...")
+        all_skills = self.job_repo.get_all_job_skills()
+        logger.info(f"Loaded skills for {len(all_skills)} jobs")
+
+        logger.info("Loading all job requirements...")
+        all_requirements = self.job_repo.get_all_job_requirements()
+        logger.info(f"Loaded requirements for {len(all_requirements)} jobs")
+
+        # Phase 1: Process all jobs and identify which need embedding
+        logger.info("Processing jobs...")
         for raw_job in raw_jobs:
             job_id = raw_job["id"]
 
-            # Get related data
-            skills = self.job_repo.get_job_skills(job_id)
-            requirements = self.job_repo.get_job_requirements(job_id)
+            # Get related data from pre-loaded dicts
+            skills = all_skills.get(job_id, [])
+            requirements = all_requirements.get(job_id, [])
 
             # Create JobData object
             job = JobData.from_db_row(raw_job, skills, requirements)
@@ -133,12 +148,66 @@ class RecommendationService:
             needs_update = job.content_hash != current_hash or not job.title_embedding
 
             if needs_update:
-                logger.info(f"Generating embeddings for job: {job_id}")
-                self._generate_job_embeddings(job, skills, requirements, current_hash)
+                jobs_to_embed.append((job, skills, requirements, current_hash))
 
             jobs_data.append(job)
 
+        # Phase 2: Batch embed jobs that need updating
+        if jobs_to_embed:
+            logger.info(f"Batch embedding {len(jobs_to_embed)} jobs...")
+            self._batch_embed_jobs(jobs_to_embed)
+
         return jobs_data
+
+    def _batch_embed_jobs(self, jobs_to_embed: list) -> None:
+        """Batch embed multiple jobs at once for better performance"""
+        batch_size = self.batch_size
+        total_batches = (len(jobs_to_embed) + batch_size - 1) // batch_size
+
+        for i in range(0, len(jobs_to_embed), batch_size):
+            batch = jobs_to_embed[i:i + batch_size]
+            logger.info(f"Processing job batch {i // batch_size + 1}/{total_batches}")
+
+            # Prepare texts for batch embedding
+            title_texts = []
+            skills_texts = []
+            req_texts = []
+
+            for job, skills, requirements, _ in batch:
+                # Title text
+                title_texts.append(f"{job.title} {job.description or ''}")
+
+                # Skills text
+                skills_text = " ".join([(s.get("skillName") or "") for s in skills])
+                skills_texts.append(skills_text if skills_text.strip() else "")
+
+                # Requirements text
+                req_text = " ".join([f"{r.get('title') or ''} {r.get('description') or ''}" for r in requirements])
+                req_texts.append(req_text if req_text.strip() else "")
+
+            # Batch embed all texts
+            title_embeddings = self.embedding_service.get_embeddings_batch(title_texts)
+            skills_embeddings = self.embedding_service.get_embeddings_batch(skills_texts)
+            req_embeddings = self.embedding_service.get_embeddings_batch(req_texts)
+
+            # Prepare batch updates for DB
+            job_updates = []
+            for idx, (job, _, _, content_hash) in enumerate(batch):
+                title_emb = title_embeddings[idx] if title_embeddings[idx] else None
+                skills_emb = skills_embeddings[idx] if skills_embeddings[idx] else None
+                req_emb = req_embeddings[idx] if req_embeddings[idx] else None
+
+                # Add to batch update list
+                job_updates.append((job.id, title_emb, skills_emb, req_emb, content_hash))
+
+                # Update in memory
+                job.title_embedding = title_emb
+                job.skills_embedding = skills_emb
+                job.requirement_embedding = req_emb
+                job.content_hash = content_hash
+
+            # Batch save to DB
+            self.job_repo.batch_update_job_embeddings(job_updates)
 
     def _generate_job_embeddings(
         self,
@@ -176,16 +245,31 @@ class RecommendationService:
         job.content_hash = content_hash
 
     def _load_and_embed_cvs(self) -> List[CVData]:
-        """Load CVs from DB and generate embeddings if needed"""
+        """Load CVs from DB and generate embeddings if needed (batch optimized)"""
         cvs_data = []
-        raw_cvs = self.cv_repo.get_main_cvs()
+        cvs_to_embed = []  # (cv, skills, experiences, content_hash)
 
+        # Batch load all data in 3 queries instead of N*2 queries
+        logger.info("Loading all CVs data...")
+        raw_cvs = self.cv_repo.get_main_cvs()
+        logger.info(f"Loaded {len(raw_cvs)} CVs")
+
+        logger.info("Loading all CV skills...")
+        all_skills = self.cv_repo.get_all_cv_skills()
+        logger.info(f"Loaded skills for {len(all_skills)} CVs")
+
+        logger.info("Loading all CV experiences...")
+        all_experiences = self.cv_repo.get_all_cv_experiences()
+        logger.info(f"Loaded experiences for {len(all_experiences)} CVs")
+
+        # Phase 1: Process all CVs and identify which need embedding
+        logger.info("Processing CVs...")
         for raw_cv in raw_cvs:
             cv_id = raw_cv["id"]
 
-            # Get related data
-            skills = self.cv_repo.get_cv_skills(cv_id)
-            experiences = self.cv_repo.get_cv_experiences(cv_id)
+            # Get related data from pre-loaded dicts
+            skills = all_skills.get(cv_id, [])
+            experiences = all_experiences.get(cv_id, [])
 
             # Create CVData object
             cv = CVData.from_db_row(raw_cv, skills, experiences)
@@ -195,12 +279,66 @@ class RecommendationService:
             needs_update = cv.content_hash != current_hash or not cv.title_embedding
 
             if needs_update:
-                logger.info(f"Generating embeddings for CV: {cv_id}")
-                self._generate_cv_embeddings(cv, skills, experiences, current_hash)
+                cvs_to_embed.append((cv, skills, experiences, current_hash))
 
             cvs_data.append(cv)
 
+        # Phase 2: Batch embed CVs that need updating
+        if cvs_to_embed:
+            logger.info(f"Batch embedding {len(cvs_to_embed)} CVs...")
+            self._batch_embed_cvs(cvs_to_embed)
+
         return cvs_data
+
+    def _batch_embed_cvs(self, cvs_to_embed: list) -> None:
+        """Batch embed multiple CVs at once for better performance"""
+        batch_size = self.batch_size
+        total_batches = (len(cvs_to_embed) + batch_size - 1) // batch_size
+
+        for i in range(0, len(cvs_to_embed), batch_size):
+            batch = cvs_to_embed[i:i + batch_size]
+            logger.info(f"Processing CV batch {i // batch_size + 1}/{total_batches}")
+
+            # Prepare texts for batch embedding
+            title_texts = []
+            skills_texts = []
+            exp_texts = []
+
+            for cv, skills, experiences, _ in batch:
+                # Title text
+                title_texts.append(f"{cv.title} {cv.summary or ''}")
+
+                # Skills text
+                skills_text = " ".join([(s.get("skillName") or "") for s in skills])
+                skills_texts.append(skills_text if skills_text.strip() else "")
+
+                # Experience text
+                exp_text = " ".join([f"{e.get('title') or ''} {e.get('description') or ''}" for e in experiences])
+                exp_texts.append(exp_text if exp_text.strip() else "")
+
+            # Batch embed all texts
+            title_embeddings = self.embedding_service.get_embeddings_batch(title_texts)
+            skills_embeddings = self.embedding_service.get_embeddings_batch(skills_texts)
+            exp_embeddings = self.embedding_service.get_embeddings_batch(exp_texts)
+
+            # Prepare batch updates for DB
+            cv_updates = []
+            for idx, (cv, _, _, content_hash) in enumerate(batch):
+                title_emb = title_embeddings[idx] if title_embeddings[idx] else None
+                skills_emb = skills_embeddings[idx] if skills_embeddings[idx] else None
+                exp_emb = exp_embeddings[idx] if exp_embeddings[idx] else None
+
+                # Add to batch update list
+                cv_updates.append((cv.id, title_emb, skills_emb, exp_emb, content_hash))
+
+                # Update in memory
+                cv.title_embedding = title_emb
+                cv.skills_embedding = skills_emb
+                cv.experience_embedding = exp_emb
+                cv.content_hash = content_hash
+
+            # Batch save to DB
+            self.cv_repo.batch_update_cv_embeddings(cv_updates)
 
     def _generate_cv_embeddings(
         self,

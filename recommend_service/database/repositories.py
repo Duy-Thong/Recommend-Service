@@ -53,6 +53,42 @@ class CVRepository:
             cursor.execute(query, (cv_id,))
             return cursor.fetchall()
 
+    def get_all_cv_skills(self) -> dict:
+        """Get all skills for all CVs in one query, returns dict {cv_id: [skills]}"""
+        query = """
+            SELECT "cvId", "skillName"
+            FROM cv_skills
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+        result = {}
+        for row in rows:
+            cv_id = row["cvId"]
+            if cv_id not in result:
+                result[cv_id] = []
+            result[cv_id].append({"skillName": row["skillName"]})
+        return result
+
+    def get_all_cv_experiences(self) -> dict:
+        """Get all experiences for all CVs in one query, returns dict {cv_id: [experiences]}"""
+        query = """
+            SELECT "cvId", title, description
+            FROM work_experiences
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+        result = {}
+        for row in rows:
+            cv_id = row["cvId"]
+            if cv_id not in result:
+                result[cv_id] = []
+            result[cv_id].append({"title": row["title"], "description": row["description"]})
+        return result
+
     def update_cv_embeddings(
         self,
         cv_id: str,
@@ -84,7 +120,42 @@ class CVRepository:
                     cv_id,
                 ),
             )
-            logger.info(f"Updated embeddings for CV: {cv_id}")
+
+    def batch_update_cv_embeddings(self, cv_updates: List[tuple]) -> None:
+        """Batch update embeddings for multiple CVs
+
+        Args:
+            cv_updates: List of (cv_id, title_embedding, skills_embedding, experience_embedding, content_hash)
+        """
+        if not cv_updates:
+            return
+
+        query = """
+            UPDATE cvs
+            SET
+                "titleEmbedding" = %s,
+                "skillsEmbedding" = %s,
+                "experienceEmbedding" = %s,
+                "contentHash" = %s,
+                "updatedAt" = %s
+            WHERE id = %s
+        """
+        now = datetime.utcnow()
+        with self.db.get_cursor() as cursor:
+            from psycopg2.extras import execute_batch
+            params = [
+                (
+                    json.dumps(title_emb) if title_emb else None,
+                    json.dumps(skills_emb) if skills_emb else None,
+                    json.dumps(exp_emb) if exp_emb else None,
+                    content_hash,
+                    now,
+                    cv_id,
+                )
+                for cv_id, title_emb, skills_emb, exp_emb, content_hash in cv_updates
+            ]
+            execute_batch(cursor, query, params, page_size=100)
+            logger.info(f"Batch updated embeddings for {len(cv_updates)} CVs")
 
     @staticmethod
     def compute_content_hash(
@@ -166,6 +237,42 @@ class JobRepository:
             cursor.execute(query, (job_id,))
             return cursor.fetchall()
 
+    def get_all_job_skills(self) -> dict:
+        """Get all skills for all jobs in one query, returns dict {job_id: [skills]}"""
+        query = """
+            SELECT "jobId", "skillName"
+            FROM job_skills
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+        result = {}
+        for row in rows:
+            job_id = row["jobId"]
+            if job_id not in result:
+                result[job_id] = []
+            result[job_id].append({"skillName": row["skillName"]})
+        return result
+
+    def get_all_job_requirements(self) -> dict:
+        """Get all requirements for all jobs in one query, returns dict {job_id: [requirements]}"""
+        query = """
+            SELECT "jobId", title, description
+            FROM job_requirements
+        """
+        with self.db.get_cursor() as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+        result = {}
+        for row in rows:
+            job_id = row["jobId"]
+            if job_id not in result:
+                result[job_id] = []
+            result[job_id].append({"title": row["title"], "description": row["description"]})
+        return result
+
     def update_job_embeddings(
         self,
         job_id: str,
@@ -201,7 +308,42 @@ class JobRepository:
                     job_id,
                 ),
             )
-            logger.info(f"Updated embeddings for Job: {job_id}")
+
+    def batch_update_job_embeddings(self, job_updates: List[tuple]) -> None:
+        """Batch update embeddings for multiple jobs
+
+        Args:
+            job_updates: List of (job_id, title_embedding, skills_embedding, requirement_embedding, content_hash)
+        """
+        if not job_updates:
+            return
+
+        query = """
+            UPDATE jobs
+            SET
+                "titleEmbedding" = %s,
+                "skillsEmbedding" = %s,
+                "requirementEmbedding" = %s,
+                "contentHash" = %s,
+                "updatedAt" = %s
+            WHERE id = %s
+        """
+        now = datetime.utcnow()
+        with self.db.get_cursor() as cursor:
+            from psycopg2.extras import execute_batch
+            params = [
+                (
+                    json.dumps(title_emb) if title_emb else None,
+                    json.dumps(skills_emb) if skills_emb else None,
+                    json.dumps(req_emb) if req_emb else None,
+                    content_hash,
+                    now,
+                    job_id,
+                )
+                for job_id, title_emb, skills_emb, req_emb, content_hash in job_updates
+            ]
+            execute_batch(cursor, query, params, page_size=100)
+            logger.info(f"Batch updated embeddings for {len(job_updates)} jobs")
 
     @staticmethod
     def compute_content_hash(
