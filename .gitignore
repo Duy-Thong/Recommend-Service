@@ -45,3 +45,10 @@ recommend_service.log
 
 # Model cache (optional - uncomment if you want to ignore downloaded models)
 # .cache/huggingface/
+# Database dump
+*.sql
+*.dump
+
+# ML models / binaries
+*.bin
+evaluation_data/
