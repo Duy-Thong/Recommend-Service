@@ -298,10 +298,11 @@ class SimilarityService:
         jobs_dict: Dict[str, JobData],
         k1: int = 1000,
         k2: int = 100,
-        k3: int = 10
+        k3: int = 10,
+        num_layers: int = 3
     ) -> List[dict]:
         """
-        Find top K jobs using 3-round cascade filtering:
+        Find top K jobs using cascade filtering (1, 2, or 3 layers):
         Round 1 (FAISS): Title similarity -> Top K1 jobs (default 1000)
         Round 2 (Loop):  Experience-Requirements similarity -> Top K2 jobs (default 100)
         Round 3 (Loop):  Skills similarity -> Top K3 jobs (default 10)
@@ -312,6 +313,7 @@ class SimilarityService:
             k1: Number of jobs to select in round 1 (title filtering)
             k2: Number of jobs to select in round 2 (experience filtering)
             k3: Number of jobs to select in round 3 (skills filtering)
+            num_layers: Number of layers to use (1, 2, or 3)
 
         Returns:
             List of dicts with job_id and similarity score
@@ -337,7 +339,15 @@ class SimilarityService:
         k1_actual = min(k1, len(self.job_ids))
         distances, indices = self.index.search(query_vec, k1_actual)
 
-        top_k1_ids = [self.job_ids[idx] for idx in indices[0] if idx != -1]
+        # Store title similarity scores for later weighted average
+        title_scores = {}
+        for dist, idx in zip(distances[0], indices[0]):
+            if idx != -1:
+                job_id = self.job_ids[idx]
+                # FAISS returns L2 distance, convert to cosine similarity (1 - distance/2)
+                title_scores[job_id] = float(1.0 - dist / 2.0)
+
+        top_k1_ids = list(title_scores.keys())
         logger.debug(f"Round 1 complete: Found {len(top_k1_ids)} jobs")
 
         if not top_k1_ids:
@@ -349,6 +359,8 @@ class SimilarityService:
         # ============================================
         logger.debug(f"Round 2: Filtering {len(top_k1_ids)} -> {k2} jobs by experience-requirements")
 
+        # Store experience similarity scores
+        exp_scores_dict = {}
         exp_scores = []
         for job_id in top_k1_ids:
             job = jobs_dict.get(job_id)
@@ -368,6 +380,7 @@ class SimilarityService:
             else:
                 sim = 0.0
 
+            exp_scores_dict[job_id] = sim
             exp_scores.append((job_id, sim))
 
         # Sort by experience-requirements similarity
@@ -379,11 +392,26 @@ class SimilarityService:
             logger.warning("Round 2 returned no jobs")
             return []
 
+        # If only 2 layers, return weighted average of Title + Experience
+        if num_layers == 2:
+            final_results = []
+            for job_id, exp_sim in exp_scores[:k2]:
+                title_sim = title_scores.get(job_id, 0.0)
+                # Weighted average: Title=0.5, Experience=0.5 for 2-layer
+                weighted_sim = 0.5 * title_sim + 0.5 * exp_sim
+                final_results.append({
+                    "job_id": job_id,
+                    "similarity": weighted_sim
+                })
+            return final_results
+
         # ============================================
         # Round 3: Skills-Skills filtering
         # ============================================
         logger.debug(f"Round 3: Filtering {len(top_k2_ids)} -> {k3} jobs by skills")
 
+        # Store skills similarity scores
+        skills_scores_dict = {}
         skill_scores = []
         for job_id in top_k2_ids:
             job = jobs_dict.get(job_id)
@@ -402,17 +430,33 @@ class SimilarityService:
             else:
                 sim = 0.0
 
-            skill_scores.append({
-                "job_id": job_id,
-                "similarity": sim
-            })
+            skills_scores_dict[job_id] = sim
+            skill_scores.append((job_id, sim))
 
         # Sort by skills similarity
-        skill_scores.sort(key=lambda x: x["similarity"], reverse=True)
-        top_k3 = skill_scores[:k3]
-        logger.debug(f"Round 3 complete: Final {len(top_k3)} jobs selected")
+        skill_scores.sort(key=lambda x: x[1], reverse=True)
+        top_k3_jobs = skill_scores[:k3]
+        logger.debug(f"Round 3 complete: Final {len(top_k3_jobs)} jobs selected")
 
-        return top_k3
+        # ============================================
+        # Calculate weighted average similarity
+        # ============================================
+        # Weights: Title=0.4, Experience=0.3, Skills=0.3
+        final_results = []
+        for job_id, _ in top_k3_jobs:
+            title_sim = title_scores.get(job_id, 0.0)
+            exp_sim = exp_scores_dict.get(job_id, 0.0)
+            skills_sim = skills_scores_dict.get(job_id, 0.0)
+
+            # Weighted average
+            weighted_sim = 0.4 * title_sim + 0.3 * exp_sim + 0.3 * skills_sim
+
+            final_results.append({
+                "job_id": job_id,
+                "similarity": weighted_sim
+            })
+
+        return final_results
 
     def _find_top_k_jobs_faiss(self, cv: CVData, top_k: int) -> List[dict]:
         """
