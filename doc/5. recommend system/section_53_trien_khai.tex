@@ -1,10 +1,14 @@
-\section{Thiết kế và cài đặt hệ thống}
+\section{Thiết kế và cài đặt hệ thống gợi ý việc làm}
 \label{sec:thiet-ke-he-thong}
 
 \subsection{Kiến trúc tổng thể}
 \label{subsec:kien-truc-tong-the}
 
 Hệ thống gợi ý việc làm được thiết kế theo kiến trúc module hóa, trong đó các thành phần được tổ chức thành các module độc lập với trách nhiệm rõ ràng. Hình \ref{fig:system-architecture} minh họa các module chính và mối quan hệ giữa chúng.
+
+Hệ thống bao gồm bốn module chính. Module RecommendationService đóng vai trò điều phối, quản lý toàn bộ quy trình gợi ý từ tải dữ liệu, tính toán embedding, đến lưu kết quả. Module EmbeddingService chịu trách nhiệm chuyển đổi văn bản thành vector nhúng sử dụng mô hình SimCSE. Module SimilarityService thực hiện tìm kiếm tương tự và thuật toán lọc phân tầng thông qua chỉ mục FAISS. Module Repositories cung cấp lớp trừu tượng để truy cập cơ sở dữ liệu PostgreSQL.
+
+Luồng dữ liệu trong hệ thống diễn ra như sau. Đầu tiên, RecommendationService tải danh sách CV và công việc từ Repositories và kiểm tra mã băm nội dung để xác định các bản ghi cần cập nhật. Tiếp theo, EmbeddingService tính toán vector nhúng cho các bản ghi có nội dung thay đổi và lưu kết quả vào PostgreSQL thông qua Repositories. Sau đó, SimilarityService xây dựng hoặc tải chỉ mục FAISS từ các vector tiêu đề công việc và thực hiện thuật toán lọc phân tầng để tìm các công việc phù hợp nhất cho mỗi CV. Cuối cùng, kết quả gợi ý được lưu vào bảng RecommendJobForCV.
 
 \begin{figure}[H]
 \centering
@@ -40,10 +44,6 @@ Hệ thống gợi ý việc làm được thiết kế theo kiến trúc module
 \caption{Kiến trúc module hệ thống gợi ý việc làm}
 \label{fig:system-architecture}
 \end{figure}
-
-Hệ thống bao gồm bốn module chính. Module RecommendationService đóng vai trò điều phối, quản lý toàn bộ quy trình gợi ý từ tải dữ liệu, tính toán embedding, đến lưu kết quả. Module EmbeddingService chịu trách nhiệm chuyển đổi văn bản thành vector nhúng sử dụng mô hình SimCSE. Module SimilarityService thực hiện tìm kiếm tương tự và thuật toán lọc phân tầng thông qua chỉ mục FAISS. Module Repositories cung cấp lớp trừu tượng để truy cập cơ sở dữ liệu PostgreSQL.
-
-Luồng dữ liệu trong hệ thống diễn ra như sau. Đầu tiên, RecommendationService tải danh sách CV và công việc từ Repositories và kiểm tra mã băm nội dung để xác định các bản ghi cần cập nhật. Tiếp theo, EmbeddingService tính toán vector nhúng cho các bản ghi có nội dung thay đổi và lưu kết quả vào PostgreSQL thông qua Repositories. Sau đó, SimilarityService xây dựng hoặc tải chỉ mục FAISS từ các vector tiêu đề công việc và thực hiện thuật toán lọc phân tầng để tìm các công việc phù hợp nhất cho mỗi CV. Cuối cùng, kết quả gợi ý được lưu vào bảng RecommendJobForCV.
 
 \subsection{Chiến lược nhúng văn bản}
 \label{subsec:chien-luoc-embedding}
@@ -90,9 +90,7 @@ Hệ thống thực hiện nhúng riêng biệt cho từng trường thông tin 
 
 Việc nhúng riêng từng trường mang lại ba lợi ích chính. Thứ nhất, thuật toán lọc phân tầng có thể sử dụng từng loại vector cho mỗi vòng lọc, cho phép so sánh có mục đích cụ thể như tiêu đề với tiêu đề, kỹ năng với kỹ năng. Thứ hai, hệ thống có thể kiểm soát được trọng số và thứ tự ưu tiên của từng yếu tố trong quá trình so khớp. Thứ ba, khi một trường bị thiếu hoặc rỗng, các trường khác vẫn có thể được sử dụng để tính toán độ tương đồng.
 
-\subsubsection{Kích thước lưu trữ}
 
-Với ba vector nhúng cho mỗi bản ghi và mỗi vector có 768 chiều kiểu float32, kích thước lưu trữ cho mỗi công việc hoặc CV vào khoảng 9KB ($768 \times 4 \times 3 = 9.216$ byte). Tổng dung lượng lưu trữ vector phụ thuộc vào số lượng bản ghi trong hệ thống và có thể được tính theo công thức $9\text{KB} \times (N_{job} + N_{cv})$.
 
 \subsection{Lưu trữ dữ liệu}
 \label{subsec:luu-tru-du-lieu}
@@ -101,6 +99,13 @@ Với ba vector nhúng cho mỗi bản ghi và mỗi vector có 768 chiều ki�
 
 Hệ thống sử dụng PostgreSQL làm nguồn lưu trữ chính với cấu trúc chuẩn hóa, trong đó các thông tin chi tiết như kỹ năng, yêu cầu, và kinh nghiệm được lưu ở các bảng riêng biệt thay vì gộp vào bảng chính. Hình \ref{fig:db-schema} minh họa các bảng chính và mối quan hệ giữa chúng.
 
+
+
+Bảng công việc (jobs) lưu trữ thông tin chính của tin tuyển dụng bao gồm tiêu đề, mô tả, và các vector nhúng. Các thông tin chi tiết được tách ra thành các bảng quan hệ: bảng job\_skills lưu danh sách kỹ năng yêu cầu với tên kỹ năng và mức độ, bảng job\_requirements lưu các yêu cầu cụ thể dưới dạng tiêu đề và mô tả, bảng job\_benefits lưu các phúc lợi đi kèm.
+
+Tương tự, bảng CV (cvs) lưu trữ thông tin chính của hồ sơ ứng viên cùng với các vector nhúng. Các thông tin chi tiết được tách thành: bảng cv\_skills lưu danh sách kỹ năng với mức độ thành thạo và số năm kinh nghiệm, bảng work\_experiences lưu lịch sử công việc với vị trí, công ty, và mô tả, bảng educations lưu thông tin học vấn.
+
+Bảng kết quả gợi ý (recommend\_jobs\_for\_cv) lưu mối quan hệ giữa CV và công việc được gợi ý cùng với điểm tương đồng. Ràng buộc duy nhất trên cặp (cvId, jobId) đảm bảo mỗi công việc chỉ được gợi ý một lần cho mỗi CV.
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
@@ -126,9 +131,9 @@ status \\
 };
 
 % Job sub-tables
-\node[subtable] (jobskill) at (-7, -1) {job\_skills};
-\node[subtable] (jobreq) at (-4, -1) {job\_requirements};
-\node[subtable] (jobbenefit) at (-1, -1) {job\_benefits};
+% \node[subtable] (jobskill) at (-7, -1) {job\_skills};
+% \node[subtable] (jobreq) at (-4, -1) {job\_requirements};
+% \node[subtable] (jobbenefit) at (-1, -1) {job\_benefits};
 
 % CV entity
 \node[table] (cv) at (4, 2) {
@@ -146,9 +151,9 @@ isOpenForJob \\
 };
 
 % CV sub-tables
-\node[subtable] (cvskill) at (1.5, -1) {cv\_skills};
-\node[subtable] (workexp) at (4, -1) {work\_experiences};
-\node[subtable] (edu) at (6.5, -1) {educations};
+% \node[subtable] (cvskill) at (1.5, -1) {cv\_skills};
+% \node[subtable] (workexp) at (4, -1) {work\_experiences};
+% \node[subtable] (edu) at (6.5, -1) {educations};
 
 % Recommendation table
 \node[table] (rec) at (0, -3) {
@@ -161,15 +166,15 @@ similarity \\
 \end{tabular}
 };
 
-% Arrows from Job
-\draw[arrow] (job) -- (jobskill);
-\draw[arrow] (job) -- (jobreq);
-\draw[arrow] (job) -- (jobbenefit);
+% % Arrows from Job
+% \draw[arrow] (job) -- (jobskill);
+% \draw[arrow] (job) -- (jobreq);
+% \draw[arrow] (job) -- (jobbenefit);
 
-% Arrows from CV
-\draw[arrow] (cv) -- (cvskill);
-\draw[arrow] (cv) -- (workexp);
-\draw[arrow] (cv) -- (edu);
+% % Arrows from CV
+% \draw[arrow] (cv) -- (cvskill);
+% \draw[arrow] (cv) -- (workexp);
+% \draw[arrow] (cv) -- (edu);
 
 % Arrows to recommendation
 \draw[arrow, dashed] (job.south) -- ++(0,-2.2) -- (rec.west);
@@ -178,13 +183,9 @@ similarity \\
 \end{tikzpicture}
 \caption{Lược đồ cơ sở dữ liệu hệ thống gợi ý}
 \label{fig:db-schema}
-\end{figure}
+\end{figure} 
 
-Bảng công việc (jobs) lưu trữ thông tin chính của tin tuyển dụng bao gồm tiêu đề, mô tả, và các vector nhúng. Các thông tin chi tiết được tách ra thành các bảng quan hệ: bảng job\_skills lưu danh sách kỹ năng yêu cầu với tên kỹ năng và mức độ, bảng job\_requirements lưu các yêu cầu cụ thể dưới dạng tiêu đề và mô tả, bảng job\_benefits lưu các phúc lợi đi kèm.
-
-Tương tự, bảng CV (cvs) lưu trữ thông tin chính của hồ sơ ứng viên cùng với các vector nhúng. Các thông tin chi tiết được tách thành: bảng cv\_skills lưu danh sách kỹ năng với mức độ thành thạo và số năm kinh nghiệm, bảng work\_experiences lưu lịch sử công việc với vị trí, công ty, và mô tả, bảng educations lưu thông tin học vấn.
-
-Bảng kết quả gợi ý (recommend\_jobs\_for\_cv) lưu mối quan hệ giữa CV và công việc được gợi ý cùng với điểm tương đồng. Ràng buộc duy nhất trên cặp (cvId, jobId) đảm bảo mỗi công việc chỉ được gợi ý một lần cho mỗi CV.
+Khi tính vector nhúng, hệ thống truy vấn dữ liệu từ các bảng quan hệ và ghép nối thành văn bản đầu vào cho mô hình. Ví dụ, để tính skillsEmbedding của một công việc, hệ thống lấy tất cả bản ghi từ bảng job\_skills có jobId tương ứng, ghép các tên kỹ năng thành chuỗi văn bản, rồi đưa qua mô hình SimCSE để có vector 768 chiều. Vector nhúng được lưu dưới dạng JSON trong bảng chính để tiện truy xuất khi cần.
 
 \begin{table}[H]
 \centering
@@ -208,8 +209,6 @@ Bảng kết quả gợi ý (recommend\_jobs\_for\_cv) lưu mối quan hệ gi�
 \hline
 \end{tabular}
 \end{table}
-
-Khi tính vector nhúng, hệ thống truy vấn dữ liệu từ các bảng quan hệ và ghép nối thành văn bản đầu vào cho mô hình. Ví dụ, để tính skillsEmbedding của một công việc, hệ thống lấy tất cả bản ghi từ bảng job\_skills có jobId tương ứng, ghép các tên kỹ năng thành chuỗi văn bản, rồi đưa qua mô hình SimCSE để có vector 768 chiều. Vector nhúng được lưu dưới dạng JSON trong bảng chính để tiện truy xuất khi cần.
 
 \subsubsection{Chỉ mục FAISS}
 
@@ -275,13 +274,13 @@ Thuật toán lọc phân tầng sử dụng ba vòng lọc tuần tự để th
 \label{fig:cascade-flow}
 \end{figure}
 
-Các tham số $K_1$, $K_2$, $K_3$ được cấu hình qua biến môi trường, với giá trị mặc định lần lượt là 1000, 100 và 10. Việc tách riêng các tham số này cho phép điều chỉnh linh hoạt tùy theo quy mô dữ liệu và yêu cầu về độ chính xác.
+Các tham số $K_1$, $K_2$, $K_3$ được cấu hình qua biến môi trường, với giá trị mặc định lần lượt là 1000, 300 và 30. Việc tách riêng các tham số này cho phép điều chỉnh linh hoạt tùy theo quy mô dữ liệu và yêu cầu về độ chính xác.
 
 \textbf{Vòng 1 - Lọc theo tiêu đề.} Vòng đầu tiên sử dụng chỉ mục FAISS để tìm $K_1$ công việc có tiêu đề tương đồng nhất với tiêu đề mong muốn của CV. Vector tiêu đề CV được chuẩn hóa L2 và truy vấn trên chỉ mục FAISS sử dụng độ tương đồng cosin. Việc sử dụng FAISS với index IVFFlat ở vòng này giúp giảm khối lượng tính toán bằng cách chỉ tìm kiếm trong một số cụm gần nhất thay vì toàn bộ tập dữ liệu.
 
-\textbf{Vòng 2 - Lọc theo kinh nghiệm.} Vòng thứ hai so sánh vector kinh nghiệm của CV với vector yêu cầu của $K_1$ công việc từ vòng trước để chọn ra $K_2$ công việc có độ khớp cao nhất. Việc tính toán được thực hiện bằng vòng lặp trực tiếp thay vì xây dựng chỉ mục FAISS mới vì với $K_1$ phần tử, chi phí xây dựng chỉ mục lớn hơn chi phí tính toán trực tiếp. Đối với CV không có kinh nghiệm như sinh viên mới ra trường, điểm mặc định được gán để không loại bỏ hoàn toàn nhưng vẫn ưu tiên các CV có kinh nghiệm phù hợp. Tương tự, công việc không có yêu cầu cụ thể được gán điểm trung tính.
+\textbf{Vòng 2 - Lọc theo kinh nghiệm.} Vòng thứ hai so sánh vector kinh nghiệm của CV với vector yêu cầu của $K_1$ công việc từ vòng trước để chọn ra $K_2$ công việc có độ khớp cao nhất. Việc tính toán được thực hiện bằng vòng lặp trực tiếp thay vì xây dựng chỉ mục FAISS mới vì với $K_1$ phần tử, chi phí xây dựng chỉ mục lớn hơn chi phí tính toán trực tiếp. Đối với CV không có kinh nghiệm như sinh viên mới ra trường, hệ thống áp dụng chiến lược bỏ qua vòng lọc này (skip layer) và giữ nguyên tất cả $K_1$ công việc từ vòng trước, đảm bảo các ứng viên mới vẫn được xếp hạng công bằng dựa trên độ tương đồng tiêu đề và kỹ năng.
 
-\textbf{Vòng 3 - Lọc theo kỹ năng.} Vòng cuối cùng so sánh vector kỹ năng của CV với vector kỹ năng của $K_2$ công việc từ vòng trước để chọn ra $K_3$ kết quả cuối cùng. Tương tự vòng 2, các trường hợp thiếu thông tin kỹ năng được xử lý bằng điểm mặc định phù hợp.
+\textbf{Vòng 3 - Lọc theo kỹ năng.} Vòng cuối cùng so sánh vector kỹ năng của CV với vector kỹ năng của $K_2$ công việc từ vòng trước để chọn ra $K_3$ kết quả cuối cùng. Tương tự vòng 2, nếu CV không có thông tin kỹ năng, vòng lọc này được bỏ qua.
 
 Bảng \ref{tab:cascade-complexity} tổng hợp độ phức tạp của từng vòng lọc, trong đó $d$ là số chiều của vector nhúng (768 chiều).
 
@@ -307,35 +306,7 @@ Với cấu hình FAISS sử dụng $\text{nlist} = 100$ và $\text{nprobe} = 10
 \subsection{Tối ưu hóa}
 \label{subsec:toi-uu-hoa}
 
-Hệ thống áp dụng nhiều chiến lược tối ưu hóa để giảm thời gian xử lý và tài nguyên tính toán. Hình \ref{fig:optimization-overview} minh họa tổng quan các chiến lược tối ưu hóa được áp dụng.
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[
-    box/.style={rectangle, draw, fill=blue!10, minimum width=4cm, minimum height=1.2cm, text centered, font=\small, rounded corners=3pt},
-    arrow/.style={->, >=stealth, thick},
-    label/.style={font=\footnotesize, text=gray}
-]
-
-% Main optimization strategies
-\node[box, fill=yellow!20] (hash) at (-3, 2) {Bộ nhớ đệm\\mã băm nội dung};
-\node[box, fill=green!20] (filter) at (3, 2) {Lọc công việc\\đang hoạt động};
-
-% Benefits
-\node[box, fill=gray!10] (benefit) at (0, 0) {Giảm thời gian xử lý\\Tiết kiệm tài nguyên};
-
-% Arrows
-\draw[arrow] (hash) -- (benefit);
-\draw[arrow] (filter) -- (benefit);
-
-% Labels
-\node[label] at (-3, 0.8) {Tránh tính lại embedding};
-\node[label] at (3, 0.8) {Giảm tập dữ liệu};
-
-\end{tikzpicture}
-\caption{Tổng quan các chiến lược tối ưu hóa}
-\label{fig:optimization-overview}
-\end{figure}
+Hệ thống áp dụng nhiều chiến lược tối ưu hóa để giảm thời gian xử lý và tài nguyên tính toán. 
 
 \subsubsection{Bộ nhớ đệm mã băm nội dung}
 

@@ -81,14 +81,14 @@ Nguyên lý cốt lõi của lọc phân tầng là xử lý theo thứ tự t�
 
 Trong hệ thống gợi ý của YouTube \cite{covington2016deep}, kiến trúc hai giai đoạn được áp dụng với giai đoạn sinh ứng viên lọc nhanh từ hàng triệu video xuống còn vài trăm, sau đó giai đoạn xếp hạng đánh giá kỹ để chọn ra kết quả cuối cùng. Tương tự, bộ phân loại phân tầng của Viola và Jones \cite{viola2001rapid} sử dụng chuỗi các bộ phân loại với độ phức tạp tăng dần để nhận dạng khuôn mặt.
 
-Hệ thống áp dụng lọc phân tầng với ba vòng: vòng thứ nhất sử dụng chỉ mục FAISS để tìm kiếm theo tiêu đề, vòng thứ hai so khớp kinh nghiệm với yêu cầu công việc, vòng thứ ba so khớp kỹ năng. So với phương pháp vét cạn, lọc phân tầng giảm khoảng 97\% số phép tính và đạt tốc độ nhanh hơn khoảng 40 lần. Chi tiết thuật toán được trình bày trong phần thiết kế hệ thống.
+Hệ thống áp dụng lọc phân tầng với ba vòng: vòng thứ nhất sử dụng chỉ mục FAISS để tìm kiếm theo tiêu đề, vòng thứ hai so khớp kinh nghiệm với yêu cầu công việc, vòng thứ ba so khớp kỹ năng. Chi tiết thuật toán được trình bày trong phần thiết kế hệ thống.
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[>=stealth, thick]
 
 % CV features box (top)
-\node[draw, fill=green!20, rounded corners, minimum width=2.5cm, minimum height=0.7cm] (cv) at (5.5,2) {Đặc trưng CV};
+% \node[draw, fill=green!20, rounded corners, minimum width=2.5cm, minimum height=0.7cm] (cv) at (5.5,2) {Đặc trưng CV};
 
 % Database (left)
 \node[draw, fill=pink!30, minimum width=1.2cm, minimum height=1cm, rounded corners=2pt] (jobs) at (0,0) {Jobs};
@@ -100,7 +100,7 @@ Hệ thống áp dụng lọc phân tầng với ba vòng: vòng thứ nhất s�
 
 % Stage 2: Experience vs Requirements
 \node[draw, fill=blue!20, minimum width=2.2cm, minimum height=1cm] (stage2) at (6.2,0) {\scriptsize Tương đồng};
-\node[font=\tiny] at (6.2,-0.8) {KN $\leftrightarrow$ Yêu cầu};
+\node[font=\tiny] at (6.2,-0.8) {Kinh nghiệm $\leftrightarrow$ Yêu cầu};
 
 % Stage 3: Skills
 \node[draw, fill=blue!20, minimum width=2.2cm, minimum height=1cm] (stage3) at (9.4,0) {\scriptsize Tương đồng};
@@ -115,10 +115,10 @@ Hệ thống áp dụng lọc phân tầng với ba vòng: vòng thứ nhất s�
 \draw[->] (stage2) -- node[above, font=\scriptsize] {$K_2$} (stage3);
 \draw[->] (stage3) -- node[above, font=\scriptsize] {} (result);
 
-% CV influence arrows (dashed)
-\draw[->, dashed, gray] (cv) -- (stage1.north);
-\draw[->, dashed, gray] (cv) -- (stage2.north);
-\draw[->, dashed, gray] (cv) -- (stage3.north);
+% % CV influence arrows (dashed)
+% \draw[->, dashed, gray] (cv) -- (stage1.north);
+% \draw[->, dashed, gray] (cv) -- (stage2.north);
+% \draw[->, dashed, gray] (cv) -- (stage3.north);
 
 \end{tikzpicture}
 \caption{Kiến trúc lọc phân tầng ba giai đoạn}

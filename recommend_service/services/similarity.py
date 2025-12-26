@@ -302,10 +302,19 @@ class SimilarityService:
         num_layers: int = 3
     ) -> List[dict]:
         """
-        Find top K jobs using cascade filtering (1, 2, or 3 layers):
-        Round 1 (FAISS): Title similarity -> Top K1 jobs (default 1000)
-        Round 2 (Loop):  Experience-Requirements similarity -> Top K2 jobs (default 100)
-        Round 3 (Loop):  Skills similarity -> Top K3 jobs (default 10)
+        Find top K jobs using cascade filtering with Skip Layer + Adaptive Weighting.
+
+        Cascade filtering (1, 2, or 3 layers):
+        - Round 1 (FAISS): Title similarity -> Top K1 jobs (default 1000)
+        - Round 2 (Loop):  Experience-Requirements similarity -> Top K2 jobs (default 100)
+                          SKIP if CV has no experience (fresher) - keeps all K1 jobs
+        - Round 3 (Loop):  Skills similarity -> Top K3 jobs (default 10)
+                          SKIP if CV has no skills - keeps top K3 from previous round
+
+        Adaptive Weighting:
+        - Base weights: Title=0.4, Experience=0.3, Skills=0.3
+        - Automatically adjusts when layers are skipped
+        - Example (fresher): Title=0.571, Skills=0.429 (experience weight redistributed)
 
         Args:
             cv: CV data with embeddings
@@ -362,31 +371,39 @@ class SimilarityService:
         # Store experience similarity scores
         exp_scores_dict = {}
         exp_scores = []
-        for job_id in top_k1_ids:
-            job = jobs_dict.get(job_id)
-            if not job:
-                logger.warning(f"Job {job_id} not found in jobs_dict")
-                continue
 
-            # Calculate experience-requirements similarity
-            if cv.experience_embedding and job.requirement_embedding:
-                sim = self.cosine_similarity(cv.experience_embedding, job.requirement_embedding)
-            elif not cv.experience_embedding:
-                # CV has no experience (e.g., fresher) -> lower score but not eliminate
-                sim = 0.3
-            elif not job.requirement_embedding:
-                # Job has no specific requirements -> neutral score
-                sim = 0.5
-            else:
-                sim = 0.0
+        # Check if CV has experience embedding
+        if cv.experience_embedding:
+            # CV has experience -> Calculate exp similarity and filter
+            logger.debug("CV has experience embedding, filtering by experience-requirements similarity")
+            for job_id in top_k1_ids:
+                job = jobs_dict.get(job_id)
+                if not job:
+                    logger.warning(f"Job {job_id} not found in jobs_dict")
+                    continue
 
-            exp_scores_dict[job_id] = sim
-            exp_scores.append((job_id, sim))
+                # Calculate experience-requirements similarity
+                if job.requirement_embedding:
+                    sim = self.cosine_similarity(cv.experience_embedding, job.requirement_embedding)
+                    exp_scores_dict[job_id] = sim
+                    exp_scores.append((job_id, sim))
+                else:
+                    # Job has no requirements -> Skip exp layer for this job
+                    exp_scores_dict[job_id] = None
+                    exp_scores.append((job_id, -1))  # -1 to push to end when sorting
 
-        # Sort by experience-requirements similarity
-        exp_scores.sort(key=lambda x: x[1], reverse=True)
-        top_k2_ids = [job_id for job_id, _ in exp_scores[:k2]]
-        logger.debug(f"Round 2 complete: Selected {len(top_k2_ids)} jobs")
+            # Sort by experience-requirements similarity
+            exp_scores.sort(key=lambda x: x[1], reverse=True)
+            top_k2_ids = [job_id for job_id, _ in exp_scores[:k2]]
+            logger.debug(f"Round 2 complete: Selected {len(top_k2_ids)} jobs")
+        else:
+            # CV has NO experience (Fresher) -> SKIP Round 2 filtering
+            logger.info("CV has no experience (fresher), SKIPPING Round 2 - keeping all K1 jobs")
+            top_k2_ids = top_k1_ids  # Keep all jobs from Round 1 (sorted by title_sim)
+            # Mark all as None (no exp data)
+            for job_id in top_k1_ids:
+                exp_scores_dict[job_id] = None
+            logger.debug(f"Round 2 skipped: Kept all {len(top_k2_ids)} jobs from Round 1")
 
         if not top_k2_ids:
             logger.warning("Round 2 returned no jobs")
@@ -395,10 +412,26 @@ class SimilarityService:
         # If only 2 layers, return weighted average of Title + Experience
         if num_layers == 2:
             final_results = []
-            for job_id, exp_sim in exp_scores[:k2]:
+            for job_id in top_k2_ids:
                 title_sim = title_scores.get(job_id, 0.0)
-                # Weighted average: Title=0.5, Experience=0.5 for 2-layer
-                weighted_sim = 0.5 * title_sim + 0.5 * exp_sim
+                exp_sim = exp_scores_dict.get(job_id)  # Can be None
+
+                # Adaptive weighting for 2-layer
+                valid_scores = []
+                valid_weights = []
+
+                valid_scores.append(title_sim)
+                valid_weights.append(0.5)
+
+                if exp_sim is not None:
+                    valid_scores.append(exp_sim)
+                    valid_weights.append(0.5)
+
+                # Normalize and calculate
+                total_weight = sum(valid_weights)
+                normalized_weights = [w / total_weight for w in valid_weights]
+                weighted_sim = sum(w * s for w, s in zip(normalized_weights, valid_scores))
+
                 final_results.append({
                     "job_id": job_id,
                     "similarity": weighted_sim
@@ -413,43 +446,75 @@ class SimilarityService:
         # Store skills similarity scores
         skills_scores_dict = {}
         skill_scores = []
-        for job_id in top_k2_ids:
-            job = jobs_dict.get(job_id)
-            if not job:
-                continue
 
-            # Calculate skills similarity
-            if cv.skills_embedding and job.skills_embedding:
-                sim = self.cosine_similarity(cv.skills_embedding, job.skills_embedding)
-            elif not cv.skills_embedding:
-                # CV has no skills listed -> lower score
-                sim = 0.3
-            elif not job.skills_embedding:
-                # Job has no skills requirement -> neutral score
-                sim = 0.5
-            else:
-                sim = 0.0
+        # Check if CV has skills embedding
+        if cv.skills_embedding:
+            # CV has skills -> Calculate skills similarity and filter
+            logger.debug("CV has skills embedding, filtering by skills similarity")
+            for job_id in top_k2_ids:
+                job = jobs_dict.get(job_id)
+                if not job:
+                    continue
 
-            skills_scores_dict[job_id] = sim
-            skill_scores.append((job_id, sim))
+                # Calculate skills similarity
+                if job.skills_embedding:
+                    sim = self.cosine_similarity(cv.skills_embedding, job.skills_embedding)
+                    skills_scores_dict[job_id] = sim
+                    skill_scores.append((job_id, sim))
+                else:
+                    # Job has no skills requirement -> Skip skills layer for this job
+                    skills_scores_dict[job_id] = None
+                    skill_scores.append((job_id, -1))  # -1 to push to end
 
-        # Sort by skills similarity
-        skill_scores.sort(key=lambda x: x[1], reverse=True)
-        top_k3_jobs = skill_scores[:k3]
-        logger.debug(f"Round 3 complete: Final {len(top_k3_jobs)} jobs selected")
+            # Sort by skills similarity
+            skill_scores.sort(key=lambda x: x[1], reverse=True)
+            top_k3_jobs = skill_scores[:k3]
+            logger.debug(f"Round 3 complete: Final {len(top_k3_jobs)} jobs selected")
+        else:
+            # CV has NO skills -> SKIP Round 3 filtering
+            logger.info("CV has no skills, SKIPPING Round 3 - keeping all K2 jobs")
+            top_k3_jobs = [(job_id, 0) for job_id in top_k2_ids]  # Keep format (job_id, score)
+            top_k3_jobs = top_k3_jobs[:k3]  # Still limit to k3
+            # Mark all as None (no skills data)
+            for job_id in top_k2_ids:
+                skills_scores_dict[job_id] = None
+            logger.debug(f"Round 3 skipped: Kept top {len(top_k3_jobs)} jobs from Round 2")
 
         # ============================================
-        # Calculate weighted average similarity
+        # Calculate weighted average similarity with ADAPTIVE WEIGHTS
         # ============================================
-        # Weights: Title=0.4, Experience=0.3, Skills=0.3
+        # Base weights: Title=0.4, Experience=0.3, Skills=0.3
+        # Adaptive: Only use weights for layers with actual data
         final_results = []
         for job_id, _ in top_k3_jobs:
             title_sim = title_scores.get(job_id, 0.0)
-            exp_sim = exp_scores_dict.get(job_id, 0.0)
-            skills_sim = skills_scores_dict.get(job_id, 0.0)
+            exp_sim = exp_scores_dict.get(job_id)  # Can be None
+            skills_sim = skills_scores_dict.get(job_id)  # Can be None
 
-            # Weighted average
-            weighted_sim = 0.4 * title_sim + 0.3 * exp_sim + 0.3 * skills_sim
+            # Collect valid scores and weights
+            valid_scores = []
+            valid_weights = []
+
+            # Title (always available from FAISS Round 1)
+            valid_scores.append(title_sim)
+            valid_weights.append(0.4)
+
+            # Experience (skip if None)
+            if exp_sim is not None:
+                valid_scores.append(exp_sim)
+                valid_weights.append(0.3)
+
+            # Skills (skip if None)
+            if skills_sim is not None:
+                valid_scores.append(skills_sim)
+                valid_weights.append(0.3)
+
+            # Normalize weights to sum to 1.0
+            total_weight = sum(valid_weights)
+            normalized_weights = [w / total_weight for w in valid_weights]
+
+            # Calculate final weighted average
+            weighted_sim = sum(w * s for w, s in zip(normalized_weights, valid_scores))
 
             final_results.append({
                 "job_id": job_id,

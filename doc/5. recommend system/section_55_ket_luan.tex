@@ -1,8 +1,8 @@
 \section{Kết luận}
 \label{sec:ket-luan-chuong5}
 
-Chương này đã trình bày hệ thống gợi ý việc làm sử dụng mô hình SimCSE trên nền PhoBERT kết hợp thuật toán lọc phân tầng ba vòng. Hệ thống được triển khai bằng Python với FastAPI, PostgreSQL và FAISS.
+Chương này trình bày hệ thống gợi ý việc làm từ lý thuyết, triển khai đến đánh giá. Về lý thuyết, chương giới thiệu kỹ thuật nhúng văn bản PhoBERT, chỉ mục tìm kiếm vector FAISS và thuật toán lọc phân tầng ba vòng. Về triển khai, hệ thống dùng Python, PostgreSQL và FAISS, tích hợp vào cơ sở dữ liệu qua các hàm cho phép gọi gợi ý trực tiếp.
 
-Kết quả đánh giá trên 2.000 CV và 14.000 công việc cho thấy hệ thống đạt MRR = 0,847, NDCG@10 = 0,814 và Hit Rate@10 = 93,4\%, vượt trội so với các phương pháp cơ sở, và phương pháp lọc nhiều lớp cho thấy kết quả tốt hơn so với chỉ gợi ý theo 1 trường nhúng tiêu đề.
+Kết quả đánh giá cho thấy hệ thống hoạt động tốt với dữ liệu thực tế, tốt hơn các phương pháp cơ sở như TF-IDF và Jaccard nhưng mức cải thiện còn hạn chế. Phân tích từng thành phần chỉ ra vòng lọc theo tiêu đề đóng vai trò quan trọng nhất, trong khi hai vòng lọc sau có đóng góp nhưng chưa đáng kể.
 
-Một số hướng cải thiện trong tương lai bao gồm: tối ưu hiệu suất hệ thống để xử lý quy mô dữ liệu lớn hơn và nâng cao độ chính xác của kết quả gợi ý thông qua việc tinh chỉnh mô hình embedding trên dữ liệu việc làm tiếng Việt.
+Hướng phát triển tiếp theo bao gồm tinh chỉnh mô hình PhoBERT trên dữ liệu tiếng Việt, thử nghiệm các phương pháp xếp hạng lại phức tạp hơn, và tối ưu chỉ mục FAISS cho quy mô lớn hơn.

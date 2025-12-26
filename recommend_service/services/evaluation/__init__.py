@@ -11,14 +11,13 @@ This module provides:
 from .title_embedding_service import TitleEmbeddingService
 from .ground_truth_generator import GroundTruthGenerator, GroundTruthPair
 from .metrics import EvaluationMetrics, EvaluationResult
-from .evaluator import Evaluator
 from .baseline_methods import (
     RandomRecommender,
     TFIDFRecommender,
-    TitleOnlyRecommender,
+    JaccardRecommender,
+    Word2VecRecommender,
     CascadeRecommender
 )
-from .comparison_evaluator import ComparisonEvaluator, ComparisonResult, MethodResult
 
 __all__ = [
     # Core evaluation
@@ -27,14 +26,10 @@ __all__ = [
     "GroundTruthPair",
     "EvaluationMetrics",
     "EvaluationResult",
-    "Evaluator",
     # Baseline methods
     "RandomRecommender",
     "TFIDFRecommender",
-    "TitleOnlyRecommender",
+    "JaccardRecommender",
+    "Word2VecRecommender",
     "CascadeRecommender",
-    # Comparison evaluation
-    "ComparisonEvaluator",
-    "ComparisonResult",
-    "MethodResult",
 ]

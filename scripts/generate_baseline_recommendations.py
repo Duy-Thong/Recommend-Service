@@ -245,8 +245,9 @@ def main():
     logger.info("\n" + "=" * 70)
     logger.info("Initializing similarity service for cascade...")
     logger.info("=" * 70)
+    embedding_service = EmbeddingService()
     similarity_service = SimilarityService()
-    similarity_service.build_index(jobs, embedding_service=embedding_service)
+    similarity_service.build_index(jobs)
 
     # Only generate 1 and 2 layers (3 layers = full cascade from DB)
     for num_layers in [1, 2]:

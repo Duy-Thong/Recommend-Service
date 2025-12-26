@@ -1,0 +1,51 @@
+% 07 - 00 General Conclusions
+\section*{Kết luận}
+\addcontentsline{toc}{section}{Kết luận}
+\label{sec:conclusion}
+
+Đồ án xây dựng hệ thống tuyển dụng trực tuyến tích hợp chức năng gợi ý việc làm dựa trên mô hình học sâu. Các kết quả đạt được bao gồm:
+
+\begin{itemize}
+\item Phân tích các hệ thống tuyển dụng hiện có VietnamWorks, TopCV và CareerViet để xác định hạn chế và cơ hội cải thiện.
+
+\item Xác định yêu cầu chức năng và phi chức năng cho ba nhóm người dùng: ứng viên, nhà tuyển dụng và quản trị viên.
+
+\item Thiết kế kiến trúc hệ thống theo mô hình Modular Clean Architecture với 6 module độc lập, mỗi module được tổ chức theo bốn tầng riêng biệt.
+
+\item Thiết kế cơ sở dữ liệu với 20 bảng và giao diện người dùng đáp ứng trên nhiều thiết bị.
+
+\item Cài đặt hệ thống với ba thành phần: backend sử dụng Node.js và TypeScript, frontend sử dụng React và Vite, dịch vụ AI sử dụng Python với FastAPI. Tích hợp các dịch vụ bên thứ ba: xác thực Google OAuth, thanh toán VNPay, dịch vụ email và lưu trữ đám mây.
+
+\item Triển khai hệ thống trên môi trường đám mây với backend và AI service trên Railway, frontend trên Vercel, cơ sở dữ liệu trên Neon PostgreSQL.
+
+\item Xây dựng module gợi ý sử dụng PhoBERT để tạo vector nhúng văn bản, FAISS để tìm kiếm vector tương đồng và thuật toán lọc ba tầng. Tích hợp module vào PostgreSQL thông qua thủ tục lưu trữ. 
+
+\item Đánh giá hệ thống với các chỉ số MRR, NDCG@10 và Hit Rate, so sánh với bốn phương pháp cơ sở: TF-IDF, Jaccard, Word2Vec và Random.
+
+\item Phân tích loại bỏ từng thành phần để đánh giá đóng góp của ba tầng lọc, kết quả cho thấy tầng lọc tiêu đề đóng vai trò chính.
+\end{itemize}
+
+Hạn chế của đồ án:
+
+\begin{itemize}
+\item Mức cải thiện so với các phương pháp cơ sở còn hạn chế, phân tích loại bỏ thành phần cho thấy hai tầng lọc sau chỉ đóng góp thêm 8\%.
+
+\item Mô hình PhoBERT sử dụng chưa được tinh chỉnh trên kho ngữ liệu tuyển dụng tiếng Việt, vector nhúng có thể chưa tối ưu cho miền ứng dụng về tuyển dụng.
+
+\item Hệ thống chưa triển khai quy trình CI/CD tự động, việc triển khai và cập nhật phải thực hiện thủ công, dễ xảy ra lỗi và tốn thời gian.
+
+\item Hệ thống chưa được đánh giá khả năng chịu tải và bảo mật trong môi trường vận hành thực tế với lượng người dùng lớn.
+
+\end{itemize}
+
+Hướng phát triển:
+
+\begin{itemize}
+\item Tinh chỉnh mô hình PhoBERT trên kho ngữ liệu tuyển dụng tiếng Việt để cải thiện vector nhúng. Nghiên cứu các phương pháp xếp hạng lại như learning-to-rank để nâng cao chất lượng danh sách gợi ý.
+
+\item Triển khai quy trình CI/CD tự động với GitHub Actions hoặc GitLab CI để tự động hóa kiểm thử, triển khai và giảm thiểu lỗi khi cập nhật hệ thống.
+
+\item Bổ sung công cụ giám sát, ghi nhật ký và cảnh báo cho hệ thống. Thực hiện kiểm tra tải và kiểm toán bảo mật để đảm bảo hệ thống sẵn sàng cho môi trường vận hành thực tế.
+
+\item Mở rộng tập dữ liệu đánh giá và thử nghiệm với người dùng thực để đo lường hiệu quả thực tế của hệ thống gợi ý trong điều kiện sử dụng hàng ngày.
+\end{itemize}

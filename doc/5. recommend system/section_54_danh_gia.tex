@@ -6,19 +6,15 @@
 
 \subsubsection{Quy mô dữ liệu}
 
-Việc đánh giá được thực hiện trên tập dữ liệu thực tế từ hệ thống, bao gồm 2.000 CV và 14.000 công việc. 
+Việc đánh giá được thực hiện trên tập dữ liệu thực tế từ hệ thống, bao gồm 3.864 CV và 14.642 công việc hoạt động. Tập ground truth đánh giá chứa 3.864 cặp CV-công việc phù hợp, trong đó mỗi CV được ghép với công việc có tiêu đề tương đồng nhất dựa trên độ tương đồng ngữ nghĩa.
 
-Dữ liệu được thu thập từ hệ thống thực tế, đảm bảo tính đa dạng về ngành nghề bao gồm công nghệ thông tin, kinh doanh, nhân sự, kế toán và các lĩnh vực khác. Các CV có mức độ kinh nghiệm khác nhau từ sinh viên mới ra trường đến chuyên gia nhiều năm kinh nghiệm.
+Dữ liệu được thu thập từ hệ thống thực tế, đảm bảo tính đa dạng về ngành nghề bao gồm công nghệ thông tin, kinh doanh, nhân sự, kế toán và các lĩnh vực khác. Các CV có mức độ kinh nghiệm khác nhau từ sinh viên mới ra trường đến chuyên gia nhiều năm kinh nghiệm. Phân phối công việc trong tập ground truth cho thấy độ phủ rộng của các vị trí việc làm khác nhau.
 
 \subsubsection{Phương pháp tạo nhãn đánh giá}
 
-Do không có dữ liệu được gán nhãn thủ công từ người dùng thực, hệ thống sử dụng phương pháp tạo nhãn tự động dựa trên độ tương đồng tiêu đề làm cơ sở đánh giá.
+Do không có sẵn dữ liệu gán nhãn từ người dùng, bộ dữ liệu CV-công việc được tạo tự động dựa trên độ tương đồng tiêu đề. Cụ thể, sử dụng mô hình sentence-transformers/paraphrase-multilingual-mpnet-base-v2 ( độc lập với mô hình dùng để nhúng văn bản cho gợi ý ) để tạo vector nhúng cho tiêu đề CV và công việc, sau đó tìm công việc có tiêu đề tương đồng nhất cho mỗi CV thông qua tìm kiếm FAISS.
 
-Phương pháp sử dụng mô hình sentence-transformers/paraphrase-multilingual-mpnet-base-v2 để tạo biểu diễn vector cho tiêu đề CV và công việc. Đây là mô hình đa ngôn ngữ được huấn luyện trên tập dữ liệu paraphrase, có khả năng nắm bắt ngữ nghĩa tương đồng giữa các câu.
-
-Quy trình tạo nhãn gồm bốn bước. Đầu tiên, hệ thống tải danh sách CV và công việc từ cơ sở dữ liệu. Tiếp theo, tiêu đề của tất cả công việc được chuyển đổi thành vector embedding và lưu vào chỉ mục FAISS IndexFlatIP để hỗ trợ tìm kiếm tương đồng cosine hiệu quả. Sau đó, với mỗi CV, hệ thống tìm công việc có tiêu đề tương đồng nhất thông qua tìm kiếm top-1 trên chỉ mục FAISS. Cuối cùng, các cặp CV-công việc cùng với điểm tương đồng được lưu thành tập ground truth.
-
-Phương pháp này cho phép tạo nhãn tự động với chi phí thấp dựa trên giả định rằng CV có tiêu đề tương đồng về ngữ nghĩa với một công việc sẽ phù hợp với công việc đó. Sau khi tạo nhãn tự động, các cặp CV-công việc được kiểm tra thủ công bởi người đánh giá để loại bỏ các trường hợp ghép cặp không hợp lý và hậu xử lý để đảm bảo chất lượng của tập ground truth.
+Cách làm này giúp tiết kiệm thời gian và cho độ chính xác tương đối cao. Tuy nhiên để đảm bảo chất lượng dữ liệu đánh giá, nhóm đã tiến hành xác nhận thủ công từng cặp CV-công việc được tạo tự động, loại bỏ các cặp không phù hợp và chỉ giữ lại những cặp thực sự hợp lý. Qua đó có được tập ground truth đáng tin cậy với 3.864 cặp CV-công việc đã được kiểm chứng.
 
 \subsection{Độ đo đánh giá}
 \label{subsec:do-do-danh-gia}
@@ -43,104 +39,121 @@ trong đó $\text{rel}_i$ là điểm liên quan của kết quả ở vị trí
 \begin{equation}
 \text{HitRate@K} = \frac{1}{|Q|} \sum_{i=1}^{|Q|} \mathbb{1}[\text{có kết quả phù hợp trong top K của truy vấn } i]
 \end{equation}
-trong đó $\mathbb{1}[\cdot]$ là hàm chỉ thị trả về 1 nếu điều kiện đúng và 0 nếu sai. Hit Rate@K = 1,0 nghĩa là mọi truy vấn đều tìm được ít nhất một kết quả phù hợp trong $K$ kết quả đầu tiên. Độ đo này đặc biệt quan trọng trong hệ thống gợi ý việc làm vì phản ánh trực tiếp trải nghiệm người dùng: liệu họ có thấy được công việc phù hợp hay không.
+trong đó $\mathbb{1}[\cdot]$ là hàm chỉ thị trả về 1 nếu điều kiện đúng và 0 nếu sai. Hit Rate@K = 1,0 nghĩa là mọi truy vấn đều tìm được ít nhất một kết quả phù hợp trong $K$ kết quả đầu tiên. Độ đo này đặc biệt quan trọng trong hệ thống gợi ý việc làm vì phản ánh trực tiếp trải nghiệm người dùng.
+
+\subsubsection{Phương pháp xác định kết quả phù hợp}
+
+Khác với phương pháp exact matching truyền thống yêu cầu công việc được gợi ý phải trùng khớp chính xác với ground truth, luận văn sử dụng phương pháp relaxed similarity matching với ngưỡng 0.75. Cụ thể, một kết quả gợi ý được coi là phù hợp nếu độ tương đồng cosine giữa embedding tiêu đề của công việc được gợi ý và công việc trong ground truth đạt ít nhất 0.75.
+
+Cách làm này phù hợp hơn với thực tế vì nhiều công việc có tiêu đề khác nhau nhưng bản chất tương tự nhau (ví dụ: "Lập trình viên Java" và "Java Developer", "Nhân viên kinh doanh" và "Sales Executive"). Việc chấp nhận các gợi ý có độ tương đồng cao giúp đánh giá hệ thống một cách công bằng hơn, phản ánh đúng khả năng tìm ra các công việc liên quan thay vì chỉ tìm được đúng một công việc cụ thể.
 
 \subsection{Kết quả đánh giá}
 \label{subsec:ket-qua-danh-gia}
 
-\subsubsection{Kết quả xếp hạng}
+\subsubsection{Kết quả xếp hạng của phương pháp đề xuất}
 
-Bảng \ref{tab:ranking-results} trình bày kết quả các độ đo xếp hạng trên bộ dữ liệu đánh giá.
+Bảng \ref{tab:ranking-results} trình bày kết quả các độ đo xếp hạng của phương pháp lọc phân tầng đề xuất trên bộ dữ liệu đánh giá.
+
+% [COMMENT: Chèn hình ranking_metrics.png vào đây - biểu đồ cột hiển thị các độ đo]
 
 \begin{table}[H]
 \centering
-\caption{Kết quả độ đo xếp hạng}
+\caption{Kết quả độ đo xếp hạng của phương pháp đề xuất}
 \label{tab:ranking-results}
 \begin{tabular}{|l|c|}
 \hline
 \textbf{Độ đo} & \textbf{Giá trị} \\
 \hline
-MRR & 0,847 \\
+MRR & 0,605 \\
 \hline
-NDCG@5 & 0,782 \\
+NDCG@5 & 0,628 \\
 \hline
-NDCG@10 & 0,814 \\
+NDCG@10 & 0,653 \\
 \hline
-Hit Rate@5 & 0,891 \\
+NDCG@30 & 0,676 \\
 \hline
-Hit Rate@10 & 0,934 \\
+Hit Rate@5 & 0,752 \\
+\hline
+Hit Rate@10 & 0,840 \\
+\hline
+Hit Rate@30 & 0,920 \\
 \hline
 \end{tabular}
 \end{table}
 
-Kết quả cho thấy hệ thống đạt hiệu suất cao trên các độ đo xếp hạng. Giá trị MRR đạt 0,847 cho thấy trung bình kết quả phù hợp đầu tiên xuất hiện ở vị trí gần đầu danh sách, cụ thể là trong khoảng vị trí 1 đến 2. Điều này có nghĩa người dùng thường không cần cuộn xuống nhiều để tìm thấy công việc phù hợp.
+Kết quả cho thấy hệ thống đạt hiệu suất tốt trên các độ đo xếp hạng. Giá trị MRR đạt 0,605 cho thấy trung bình kết quả phù hợp đầu tiên xuất hiện ở vị trí khoảng 1 đến 2 trong danh sách gợi ý. Điều này có nghĩa người dùng thường không cần xem quá nhiều kết quả để tìm thấy công việc phù hợp.
 
-Độ đo NDCG tăng từ 0,782 ở top 5 lên 0,814 ở top 10, cho thấy các kết quả phù hợp được xếp hạng tốt và tập trung ở các vị trí đầu. Giá trị NDCG@10 vượt ngưỡng 0,8 thể hiện chất lượng xếp hạng cao, các công việc liên quan nhất được ưu tiên hiển thị trước.
+Độ đo NDCG tăng dần từ 0,628 ở top 5 lên 0,653 ở top 10 và đạt 0,676 ở top 30, cho thấy các kết quả phù hợp được xếp hạng ở các vị trí đầu. Xu hướng tăng dần này thể hiện hệ thống không chỉ tìm được kết quả phù hợp mà còn sắp xếp chúng theo thứ tự hợp lý.
 
-Hit Rate@5 đạt 89,1\% và Hit Rate@10 đạt 93,4\% cho thấy phần lớn người dùng tìm được ít nhất một công việc phù hợp trong số các gợi ý hàng đầu. Với Hit Rate@10 gần 94\%, hệ thống đảm bảo rằng hầu hết các CV đều nhận được gợi ý có ý nghĩa, nâng cao trải nghiệm người dùng.
+Hit Rate@5 đạt 75,2\%, Hit Rate@10 đạt 84,0\% và Hit Rate@30 đạt 92,0\% cho thấy đa số người dùng tìm được ít nhất một công việc phù hợp trong số các gợi ý hàng đầu. Đặc biệt, với Hit Rate@10 đạt 84\%, hệ thống đảm bảo rằng khoảng 8 trong 10 CV đều nhận được gợi ý phù hợp trong top 10 kết quả, đáp ứng tốt nhu cầu thực tế của người dùng.
 
 \subsubsection{So sánh với phương pháp cơ sở}
 
-Để đánh giá hiệu quả của thuật toán lọc phân tầng sử dụng SimCSE, hệ thống được so sánh với các phương pháp cơ sở bao gồm gợi ý ngẫu nhiên, TF-IDF kết hợp độ tương đồng cosin, và SimCSE chỉ sử dụng tiêu đề. Bảng \ref{tab:baseline-comparison} trình bày kết quả so sánh.
+Để đánh giá hiệu quả của thuật toán lọc phân tầng, hệ thống được so sánh với các phương pháp cơ sở bao gồm gợi ý ngẫu nhiên, TF-IDF kết hợp độ tương đồng cosine và Jaccard similarity. Bảng \ref{tab:baseline-comparison} trình bày kết quả so sánh.
+
+% [COMMENT: Chèn hình baseline_comparison.png vào đây - so sánh 4 phương pháp: Random, TF-IDF, Jaccard, Cascade]
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Figures/Chương 5 Recommend Service/baseline_comparison.png}
+	\caption{So sánh với các phương pháp cơ sở}
+\end{figure}
 
 \begin{table}[H]
 \centering
 \caption{So sánh với phương pháp cơ sở}
 \label{tab:baseline-comparison}
-\begin{tabular}{|l|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|}
 \hline
-\textbf{Phương pháp} & \textbf{MRR} & \textbf{NDCG@10} & \textbf{Hit Rate@10} \\
+\textbf{Phương pháp} & \textbf{MRR} & \textbf{NDCG@10} & \textbf{Hit@10} & \textbf{Hit@30} \\
 \hline
-Ngẫu nhiên & 0,089 & 0,112 & 0,203 \\
+Ngẫu nhiên & 0,183 & 0,231 & 0,430 & 0,642 \\
 \hline
-TF-IDF + Cosin & 0,524 & 0,487 & 0,612 \\
+TF-IDF + Cosine & 0,505 & 0,563 & 0,768 & 0,870 \\
 \hline
-SimCSE (chỉ tiêu đề) & 0,723 & 0,695 & 0,847 \\
+Jaccard & 0,523 & 0,575 & 0,757 & 0,856 \\
 \hline
-Lọc phân tầng (đề xuất) & 0,847 & 0,814 & 0,934 \\
+Lọc phân tầng (đề xuất) & \textbf{0,605} & \textbf{0,653} & \textbf{0,840} & \textbf{0,920} \\
 \hline
 \end{tabular}
 \end{table}
 
-Kết quả so sánh cho thấy sự vượt trội rõ rệt của phương pháp đề xuất. Phương pháp gợi ý ngẫu nhiên đạt kết quả rất thấp với MRR chỉ 0,089 và Hit Rate@10 chỉ 20,3\%, xác nhận rằng việc gợi ý không có cơ sở là không hiệu quả.
-
-Phương pháp TF-IDF kết hợp độ tương đồng cosin cải thiện đáng kể so với ngẫu nhiên với MRR đạt 0,524 và Hit Rate@10 đạt 61,2\%. Tuy nhiên, phương pháp này còn hạn chế vì chỉ dựa trên tần suất từ mà không nắm bắt được ngữ nghĩa sâu của văn bản.
-
-SimCSE chỉ sử dụng tiêu đề đạt kết quả khá tốt với MRR 0,723 và Hit Rate@10 84,7\%, cho thấy lợi ích của việc sử dụng mô hình ngôn ngữ tiền huấn luyện để tạo biểu diễn ngữ nghĩa. Tuy nhiên, việc chỉ dựa vào tiêu đề bỏ qua các thông tin quan trọng khác như kinh nghiệm và kỹ năng.
-
-Phương pháp lọc phân tầng đề xuất đạt kết quả cao nhất với MRR 0,847 và Hit Rate@10 93,4\%, cải thiện 17\% về MRR và 10\% về Hit Rate@10 so với SimCSE chỉ tiêu đề. Sự cải thiện này nhờ việc kết hợp nhiều khía cạnh của sự phù hợp qua ba vòng lọc.
-
+Từ kết quả so sánh, có thể thấy phương pháp đề xuất cho hiệu quả tốt hơn các phương pháp baseline, nhưng mức độ cải thiện không quá nổi bật. 
 \subsubsection{Phân tích ảnh hưởng của các vòng lọc}
 
-Để đánh giá đóng góp của từng vòng lọc trong thuật toán lọc phân tầng, thực nghiệm được tiến hành với các cấu hình khác nhau. Bảng \ref{tab:ablation-study} trình bày kết quả phân tích.
+Để hiểu rõ hơn về vai trò của từng vòng lọc trong thuật toán, nhóm tiến hành thực nghiệm với nhiều cấu hình khác nhau: chỉ dùng vòng lọc tiêu đề, kết hợp tiêu đề với kinh nghiệm, và đầy đủ cả ba vòng lọc. Kết quả được trình bày trong Bảng \ref{tab:ablation-study}.
 
+% [COMMENT: Chèn hình ablation_study.png vào đây - 3 cột thể hiện hiệu quả tăng dần qua các vòng lọc]
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Figures/Chương 5 Recommend Service/ablation_study.png}
+	\caption{So sánh các vòng lọc}
+\end{figure}
 \begin{table}[H]
 \centering
 \caption{Ảnh hưởng của các vòng lọc}
 \label{tab:ablation-study}
-\begin{tabular}{|l|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|}
 \hline
-\textbf{Cấu hình} & \textbf{NDCG@10} & \textbf{Hit Rate@10} & \textbf{Thời gian (ms)} \\
+\textbf{Cấu hình} & \textbf{MRR} & \textbf{NDCG@10} & \textbf{Hit@10} & \textbf{Hit@30} \\
 \hline
-Vòng 1 (tiêu đề) & 0,695 & 0,847 & 2,3 \\
+Vòng 1 (tiêu đề) & 0,558 & 0,608 & 0,785 & 0,880 \\
 \hline
-Vòng 1 + 2 (+ kinh nghiệm) & 0,761 & 0,903 & 19,7 \\
+Vòng 1 + 2 (+ kinh nghiệm) & 0,578 & 0,626 & 0,805 & 0,895 \\
 \hline
-Vòng 1 + 2 + 3 (+ kỹ năng) & 0,814 & 0,934 & 24,5 \\
+Vòng 1 + 2 + 3 (+ kỹ năng) & \textbf{0,605} & \textbf{0,653} & \textbf{0,840} & \textbf{0,920} \\
+\hline
+Cải thiện (1 $\rightarrow$ 3) & +0,047 & +0,045 & +0,055 & +0,040 \\
+\hline
+Cải thiện tương đối & +8,4\% & +7,4\% & +7,0\% & +4,5\% \\
 \hline
 \end{tabular}
 \end{table}
 
-Kết quả phân tích cho thấy mỗi vòng lọc đóng góp tích cực vào hiệu suất tổng thể. Vòng lọc đầu tiên sử dụng FAISS tìm kiếm theo tiêu đề đạt NDCG@10 là 0,695 và Hit Rate@10 là 84,7\% với thời gian chỉ 2,3 mili giây nhờ tận dụng chỉ mục vector.
+Kết quả cho thấy khi thêm dần các vòng lọc thì hiệu suất có cải thiện nhưng không nhiều. Cấu hình chỉ dùng vòng lọc tiêu đề (tìm kiếm qua FAISS) đã cho MRR 0,558, NDCG@10 0,608 và Hit Rate@10 78,5\%. Điều này cho thấy việc dùng PhoBERT embedding để so sánh tiêu đề đã cho kết quả khá tốt.
 
-Khi thêm vòng lọc thứ hai so khớp kinh nghiệm với yêu cầu công việc, NDCG@10 tăng lên 0,761 và Hit Rate@10 tăng lên 90,3\%. Sự cải thiện 9,5\% về NDCG cho thấy việc xem xét mức độ phù hợp về kinh nghiệm giúp xếp hạng chính xác hơn. Thời gian tăng lên 19,7 mili giây do cần tính toán độ tương đồng cho 1.000 ứng viên từ vòng 1.
+Khi thêm vòng lọc kinh nghiệm (cấu hình 2 vòng), các chỉ số tăng lên MRR 0,578, NDCG@10 0,626 và Hit Rate@10 80,5\%. Vòng lọc này giúp loại bớt những công việc có yêu cầu kinh nghiệm không khớp với ứng viên, làm kết quả gợi ý chính xác hơn một chút.
 
-Vòng lọc thứ ba so khớp kỹ năng tiếp tục cải thiện kết quả với NDCG@10 đạt 0,814 và Hit Rate@10 đạt 93,4\%. Thời gian tổng cộng là 24,5 mili giây vẫn nằm trong ngưỡng chấp nhận được cho ứng dụng thời gian thực. Sự gia tăng chỉ 4,8 mili giây ở vòng 3 là do chỉ cần xử lý 100 ứng viên còn lại từ vòng 2.
+Cấu hình đầy đủ ba vòng lọc (tiêu đề, kinh nghiệm và kỹ năng) cho kết quả tốt nhất với MRR 0,605, NDCG@10 0,653 và Hit Rate@10 84,0\%. So với chỉ dùng tiêu đề, cấu hình này cải thiện 8,4\% về MRR, 7,4\% về NDCG@10 và 7,0\% về Hit Rate@10. Mức cải thiện này khá khiêm tốn, cho thấy vòng lọc đầu tiên dựa vào tiêu đề đã đóng vai trò chính rồi.
 
-Tổng thể, việc thêm các vòng lọc cải thiện NDCG@10 thêm 17\% so với chỉ sử dụng tiêu đề, trong khi thời gian xử lý vẫn dưới 25 mili giây cho mỗi CV, đáp ứng yêu cầu về độ trễ của hệ thống gợi ý trực tuyến.
-
-\subsubsection{Kết luận}
-\label{subsec:ket-luan-danh-gia}
-
-Kết quả đánh giá cho thấy hệ thống gợi ý việc làm sử dụng thuật toán lọc phân tầng kết hợp mô hình SimCSE trên nền tảng PhoBERT đạt hiệu quả cao trên bộ dữ liệu thực tế với 2.000 CV và 5.000 công việc. Thuật toán lọc phân tầng ba vòng cho phép kết hợp nhiều khía cạnh của sự phù hợp bao gồm tiêu đề, kinh nghiệm và kỹ năng, vượt trội so với các phương pháp cơ sở như gợi ý ngẫu nhiên và TF-IDF. Việc sử dụng chỉ mục FAISS với cấu hình IVFFlat đảm bảo tốc độ truy vấn nhanh trong khi vẫn duy trì độ chính xác cao, phù hợp với yêu cầu của ứng dụng thực tế.
+Vòng lọc kỹ năng có vai trò quan trọng để đảm bảo ứng viên có đủ năng lực kỹ thuật. Tuy nhiên khi nhìn vào số liệu thì việc kết hợp cả ba vòng lọc cũng chỉ cải thiện thêm được ít so với chỉ dùng tiêu đề. Điều này phản ánh việc độ tương đồng tiêu đề là yếu tố quan trọng nhất, còn các vòng lọc sau chủ yếu để tinh chỉnh thêm.
 
