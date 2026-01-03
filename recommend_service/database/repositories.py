@@ -366,7 +366,7 @@ class RecommendationRepository:
         self.db = db
 
     def upsert_recommendations(self, cv_id: str, recommendations: List[dict]) -> None:
-        """Upsert job recommendations for a CV"""
+        """Upsert job recommendations for a CV. Always deletes old recommendations first."""
         # First, delete old recommendations for this CV
         delete_query = """
             DELETE FROM recommend_jobs_for_cv
@@ -382,14 +382,17 @@ class RecommendationRepository:
         """
 
         with self.db.get_cursor() as cursor:
+            # Always delete old recommendations first
             cursor.execute(delete_query, (cv_id,))
 
+            # Then insert new recommendations (if any)
             for rec in recommendations:
                 cursor.execute(insert_query, (cv_id, rec["job_id"], rec["similarity"]))
 
-            logger.info(
-                f"Upserted {len(recommendations)} recommendations for CV: {cv_id}"
-            )
+            log_msg = f"Upserted {len(recommendations)} recommendations for CV: {cv_id}"
+            if not recommendations:
+                log_msg += " (deleted old recommendations)"
+            logger.info(log_msg)
 
     def get_recommendations_for_cv(self, cv_id: str, limit: int = 20) -> List[dict]:
         """Get job recommendations for a CV"""

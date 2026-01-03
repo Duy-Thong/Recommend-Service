@@ -427,10 +427,12 @@ class RecommendationService:
                     self.top_k
                 )
 
-            # Save recommendations
+            # Save recommendations (always delete old ones, even if no new ones to save)
+            self.rec_repo.upsert_recommendations(cv.id, top_jobs)
+            total_recommendations += len(top_jobs)
             if top_jobs:
-                self.rec_repo.upsert_recommendations(cv.id, top_jobs)
-                total_recommendations += len(top_jobs)
                 logger.info(f"Saved {len(top_jobs)} recommendations for CV: {cv.id}")
+            else:
+                logger.info(f"No recommendations found for CV: {cv.id}, cleared old recommendations")
 
         return total_recommendations
