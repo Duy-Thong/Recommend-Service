@@ -1,0 +1,1068 @@
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+\documentclass[aspectratio=169,xcolor=dvipsnames, t]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[vietnamese]{babel}
+\usepackage{ragged2e}
+\usepackage{fontspec} % Allows using custom font. MUST be before loading the theme!
+\usetheme{SimplePlusAIC}
+\usepackage{hyperref}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and  \bottomrule in tables
+\usepackage{svg} %allows using svg figures
+\usepackage{tikz}
+\usepackage{makecell}
+\usepackage{wrapfig}
+% ADD YOUR PACKAGES BELOW
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE CONFIGURATION
+%----------------------------------------------------------------------------------------
+
+\title[Hệ thống gợi ý việc làm]{PHÁT TRIỂN HỆ THỐNG TUYỂN DỤNG TRỰC TUYẾN TÍCH HỢP CHỨC NĂNG GỢI Ý VIỆC LÀM SỬ DỤNG MÔ HÌNH HỌC SÂU} % The short title appears at the bottom of every slide, the full title is only on the title page
+\subtitle{ĐỒ ÁN TỐT NGHIỆP ĐẠI HỌC}
+\author{%
+Giáo viên hướng dẫn: PGS.TS. Trần Đình Quế\\[0.3em]
+Sinh viên thực hiện: Đào Duy Thông\\[0.1em]
+\hspace*{3.45cm} Nguyễn Ngọc Hà\\[0.1em]
+\hspace*{3.45cm} Nguyễn Minh Tùng%
+}
+\institute[]{Khoa CNTT 1 - PTIT
+}
+% Your institution as it will appear on the bottom of every slide, maybe shorthand to save space
+
+
+\date{2025} % Date, can be changed to a custom date
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+\begin{document}
+
+\maketitlepage
+
+\begin{frame}[t]{Nội dung}
+    % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+    \tableofcontents
+\end{frame}
+
+%------------------------------------------------
+% Section divider frame
+\makesection{Mở đầu}
+%------------------------------------------------
+
+\begin{frame}{Bối cảnh xã hội}
+\justifying
+
+\textbf{Chuyển đổi số trong tuyển dụng:}
+\begin{itemize}
+    \item Các nền tảng như VietnamWorks, TopCV, CareerBuilder tạo hệ sinh thái kết nối rộng lớn.
+    \item Quy mô thị trường tuyển dụng trực tuyến Việt Nam: \textbf{~1,2 tỷ USD}.
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Thách thức hiện tại:}
+\begin{itemize}
+    \item Quá tải thông tin: hàng nghìn tin tuyển dụng mỗi ngày, vô số hồ sơ ứng viên.
+    \item Khó khăn trong việc tìm đúng người cho đúng vị trí.
+    \item Các hệ thống truyền thống chưa cá nhân hóa hiệu quả $\rightarrow$ bỏ lỡ cơ hội.
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Cơ hội:} AI và Deep Learning giúp hiểu ngữ nghĩa, gợi ý chính xác hơn.
+
+\end{frame}
+
+\begin{frame}{Nội dung nghiên cứu}
+\justifying
+
+\begin{enumerate}
+    \item \textbf{Khảo sát và phân tích hệ thống tuyển dụng hiện có:} Khảo sát các chức năng, nghiệp vụ, phân tích ưu điểm, hạn chế và xu hướng ứng dụng trí tuệ nhân tạo trong bài toán gợi ý việc làm.
+    \item \textbf{Phân tích yêu cầu và thiết kế hệ thống:} Thực hiện phân tích yêu cầu và thiết kế hệ thống thông qua các mô hình UML như: biểu đồ ca sử dụng, biểu đồ lớp, biểu đồ tuần tự, …; thiết kế kiến trúc tổng thể của hệ thống, thiết kế chi tiết API, cơ sở dữ liệu, giao diện người dùng.
+\end{enumerate}
+
+\end{frame}
+\begin{frame}{Nội dung nghiên cứu}
+\justifying
+
+\begin{enumerate}
+    \setcounter{enumi}{2}
+    \item \textbf{Phát triển mô đun gợi ý việc làm :} Nghiên cứu các mô hình học sâu phù hợp cho bài toán gợi ý việc làm. Ứng dụng mô hình học sâu để xây dựng module gợi ý việc làm, đánh giá hiệu quả gợi ý.
+    \item \textbf{Phát triển và đánh giá hệ thống:} Phát triển hệ thống web hoàn chỉnh bao gồm giao diện người dùng, API, cơ sở dữ liệu và mô-đun gợi ý. Triển khai hệ thống lên môi trường đám mây.
+\end{enumerate}
+
+\end{frame}
+% CHƯƠNG 2: PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
+
+\makesection{Phân tích và Thiết kế hệ thống}
+
+% 1. YÊU CẦU CHỨC NĂNG (trang 13 báo cáo, 3 gạch đầu dòng)
+
+\begin{frame}{Yêu cầu chức năng}
+\justifying
+
+Hệ thống phục vụ ba nhóm người dùng chính:
+
+\vspace{0.3cm}
+\begin{itemize}
+    \item \textbf{Ứng viên:} Đăng ký/đăng nhập, tạo và quản lý CV, tìm kiếm việc làm/công ty, lưu việc làm, xem việc làm được gợi ý, nộp hồ sơ trực tuyến, theo dõi đơn ứng tuyển.
+    
+    \item \textbf{Nhà tuyển dụng:} Quản lý thông tin công ty, quản lý thành viên và vai trò trong công ty, tạo/chỉnh sửa/đóng tin tuyển dụng, tiếp nhận và đánh giá đơn ứng tuyển, tìm kiếm và lưu hồ sơ ứng viên phù hợp.
+    
+    \item \textbf{Quản trị viên:} Quản lý tài khoản, phân quyền, kiểm duyệt thông tin công ty, quản lý mẫu CV, đảm bảo tính minh bạch và tuân thủ quy định sử dụng nền tảng.
+\end{itemize}
+
+\end{frame}
+
+% 2. YÊU CẦU PHI CHỨC NĂNG (check lại)
+
+\begin{frame}{Yêu cầu phi chức năng}
+\justifying
+
+\begin{itemize}
+    \item \textbf{Hiệu năng}: Thời gian phản hồi trung bình cho các thao tác cơ bản không vượt quá 3 giây.
+    
+    \item \textbf{Bảo mật}: 
+    \begin{itemize}
+        \item Bảo vệ dữ liệu cá nhân của người dùng và thông tin
+doanh nghiệp
+        \item Áp dụng cơ chế xác thực an toàn và mã hoá dữ liệu nhạy
+cảm
+        \item Phân quyền truy cập rõ ràng cho từng loại người dùng
+    \end{itemize}
+    
+    \item \textbf{Khả năng mở rộng }: 
+    \begin{itemize}
+        \item Cho phép mở rộng hệ thống dễ dàng khi số lượng người dùng tăng
+        \item Hỗ trợ tích hợp thêm các tính năng mới mà không ảnh
+hưởng tới hệ thống hiện tại
+    \end{itemize}
+    
+    \item \textbf{Khả năng sử dụng }: 
+    \begin{itemize}
+        \item Giao diện trực quan, thân thiện, dễ thao tác với cả người dùng phổ thông
+        \item Hỗ trợ hiển thị tốt trên cả máy tính và thiết bị di động
+    \end{itemize}
+    
+\end{itemize}
+
+\end{frame}
+
+% 3. MÔ HÌNH USECASE (giữ nguyên)
+
+\begin{frame}{Mô hình chức năng - Usecase}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/Overview.png}
+    \caption{Usecase tổng quan}
+\end{figure}
+\end{frame}
+
+% 4. ACTIVITY DIAGRAM (2 hình 1 trang) - THÊM MỚI
+
+\begin{frame}{Mô hình hoạt động - Activity Diagram}
+\justifying
+\small
+
+\begin{columns}[T]
+\column{0.45\textwidth}
+
+\textbf{Activity Diagram} mô tả các quy trình, luồng công việc và hoạt động trong hệ thống:
+
+\vspace{0.2cm}
+\begin{itemize}
+    \item Hiển thị các bước tuần tự mà người dùng và hệ thống thực hiện
+    \item Xác định điểm quyết định, nhánh điều kiện
+    \item Giúp xác nhận rõ ràng logic nghiệp vụ
+\end{itemize}
+
+
+
+\column{0.52\textwidth}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{figures/CandidateCreateCV1.png}
+    \caption{Biểu đồ hoạt động: Ứng viên tạo CV}
+\end{figure}
+\end{columns}
+\end{frame}
+
+% \begin{frame}{Mô hình hoạt động (tiếp theo)}
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.3\textwidth]{figures/CandidateApplyJob1.png}
+%     \caption{Biểu đồ hoạt động: Ứng viên ứng tuyển việc làm}
+% \end{figure}
+
+% \end{frame}
+% 5. CLASS DIAGRAM - Thêm giải thích trước (tr 28) - ĐẢO VỊ TRÍ
+
+\begin{frame}{Xác định lớp, thuộc tính và hoạt động}
+\justifying
+\small
+
+Dựa trên phân tích yêu cầu nghiệp vụ và các usecase, xác định được các lớp thực thể chính:
+
+\vspace{0.3cm}
+\textbf{5 lớp cốt lõi:}
+\begin{itemize}
+    \item \textbf{User}: Người dùng (ứng viên, nhà tuyển dụng, admin) với các thuộc tính: id, email, passwordHash, fullName, role, status...
+    \item \textbf{Company}: Công ty với thông tin như name, website, description, industry, companySize, status...
+    \item \textbf{CV}: Hồ sơ ứng viên với title, fullName, email, summary, titleEmbedding (vector AI)...
+    \item \textbf{Job}: Tin tuyển dụng với title, description, location, experienceLevel, titleEmbedding...
+    \item \textbf{Application}: Đơn ứng tuyển kết nối CV và Job, với status, coverLetter, notes...
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Các lớp phụ trợ:} CVSkill, Education, WorkExperience, Salary, JobBenefit, CompanyMember, 
+
+SavedJob, SavedCV, Notification...
+
+\end{frame}
+
+\begin{frame}{Mô hình cấu trúc - Class Diagram}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.65\textwidth]{figures/class.png}
+    \caption{Biểu đồ lớp}
+\end{figure}
+\end{frame}
+
+% 6. SEQUENCE DIAGRAM (2 hình) - THÊM MỚI
+
+\begin{frame}{Mô hình hành vi - Sequence Diagram}
+\justifying
+\small
+
+\begin{columns}[T]
+\column{0.40\textwidth}
+
+\textbf{Sequence Diagram} mô tả tương tác giữa các đối tượng theo thời gian:
+
+\vspace{0.2cm}
+\begin{itemize}
+    \item Hiển thị thứ tự gọi giữa các thành phần (Actor, Controller, Service, Database)
+    \item Xác định luồng dữ liệu và phản hồi
+    \item Giúp hiểu rõ cách các module phối hợp
+\end{itemize}
+
+
+\column{0.55\textwidth}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.63\textwidth]{figures/CandidateCreateCV.png}
+    \caption{Biểu đồ tuần tự: Ứng viên tạo CV}
+\end{figure}
+\end{columns}
+\end{frame}
+
+% \begin{frame}{Mô hình hành vi - Sequence Diagram (tiếp theo)}
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.6\textwidth]{figures/CandidateApplyJob.png}
+%     \caption{Biểu đồ tuần tự: Ứng viên ứng tuyển việc làm}
+% \end{figure}
+% \end{frame}
+
+% 7. STATE DIAGRAM (2 hình) - THÊM MỚI
+
+\begin{frame}{Mô hình trạng thái - State Machine Diagram}
+\justifying
+\small
+
+\begin{columns}[T]
+\column{0.4\textwidth}
+
+\textbf{State Machine Diagram} mô tả các trạng thái và chuyển đổi giữa chúng:
+
+\vspace{0.2cm}
+\begin{itemize}
+    \item Hiển thị tất cả trạng thái có thể của một thực thể
+    \item Xác định điều kiện kích hoạt (trigger) chuyển đổi trạng thái
+    \item Giúp xác thực logic trạng thái trong quy trình
+\end{itemize}
+
+\column{0.55\textwidth}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/Application.png}
+    \caption{Biểu đồ trạng thái: Đơn ứng tuyển}
+\end{figure}
+\end{columns}
+\end{frame}
+
+% \begin{frame}{Mô hình trạng thái (tiếp theo)}
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.5\textwidth]{figures/Company.png}
+%     \caption{Biểu đồ trạng thái: Công ty}
+% \end{figure}
+% \end{frame}
+
+% 8. CLEAN ARCHITECTURE (2 trang: 1 lý thuyết + 1 hình) - THÊM MỚI
+
+\begin{frame}{Clean Architecture - Tổng quan}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\justifying
+
+\textbf{Clean Architecture} là mô hình kiến trúc phần mềm tách biệt các tầng nghiệp vụ, giúp hệ thống độc lập với framework, database và UI.
+
+\vspace{0.3cm}
+\textbf{Mô hình 4 tầng:}
+\begin{enumerate}
+    \item \textbf{Domain Layer}: Nghiệp vụ cốt lõi, hoàn toàn độc lập
+    \item \textbf{Application Layer}: Logic nghiệp vụ cụ thể
+    \item \textbf{Interface Adapters}: Chuyển đổi dữ liệu giữa tầng nghiệp vụ và bên ngoài
+    \item \textbf{Infrastructure}: Triển khai cụ thể (DB, API, Services)
+\end{enumerate}
+
+\column{0.4\textwidth}
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/clean-architecture.jpeg}
+    \caption{Kiến trúc Clean Architecture}
+\end{figure}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Thiết kế hệ thống theo Clean Architecture}
+\begin{columns}[T]
+\column{0.45\textwidth}
+\justifying
+
+\vspace{0.2cm}
+\textbf{1. Domain Layer:} Entities: User, Job, Company,...
+
+\vspace{0.2cm}
+\textbf{2. Application Layer:} Use Cases: CreateCV, ApplyJob,...
+
+\vspace{0.2cm}
+\textbf{3. Interface Adapters:}
+\begin{itemize}
+    \item Controllers: REST API
+    \item Repositories: Data access
+    \item Presenters: DTO transformation
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{4. Infrastructure:} PostgreSQL, Firebase, AI Service, File Storage
+
+\column{0.5\textwidth}
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/Layer.png}
+    \caption{Kiến trúc phân tầng của hệ thống}
+\end{figure}
+\end{columns}
+\end{frame}
+
+% 9. CONTRACT + METHOD: createCV - THÊM MỚI
+
+\begin{frame}[fragile]{Hợp đồng và phương thức: createCV}
+\justifying
+\small
+
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Use Case}: CreateCVUseCase
+
+\vspace{0.2cm}
+\textbf{Hợp đồng (Contract):}
+\begin{itemize}
+    \item \textbf{Tiền điều kiện}: User đã đăng nhập, có role = CANDIDATE
+    \item \textbf{Hậu điều kiện}: CV mới được tạo và lưu vào database, trả về id của CV
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Chữ ký phương thức:}
+\begin{verbatim}
+createCV(userId: string, 
+cvData: CreateCVDto): 
+Promise<CV>
+\end{verbatim}
+
+\column{0.48\textwidth}
+\textbf{Thuật toán:}
+\begin{enumerate}
+    \item Validate dữ liệu đầu vào (title, fullName, email, phoneNumber...)
+    \item Kiểm tra userId có tồn tại và role = CANDIDATE
+    \item Tạo đối tượng CV với dữ liệu từ cvData
+    \item Lưu CV vào database qua CVRepository
+    \item Gọi AI Service để tạo embedding cho title, skills, experience
+    \item Cập nhật CV với embedding vectors
+    \item Return CV object
+\end{enumerate}
+\end{columns}
+
+\end{frame}
+
+% 10. ERD (CẢ ORM) - ĐẢO VỊ TRÍ LÊN TRƯỚC DEPLOYMENT
+
+\begin{frame}{Thiết kế cơ sở dữ liệu}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.65\textwidth]{figures/orm.png}
+    \caption{ORM Diagram}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Thiết kế cơ sở dữ liệu}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/erd.png}
+    \caption{Entity Relationship Diagram}
+\end{figure}
+
+\vspace{-0.3cm}
+\textbf{CSDL quan hệ}: PostgreSQL với 20+ bảng chính, bao gồm User, Company, CV, Job, Application, Education, WorkExperience, Salary, CompanyMember, SavedJob...
+
+\end{frame}
+
+% 11. GIAO DIỆN: Lý thuyết + 1 hình - THÊM MỚI
+
+\begin{frame}{Thiết kế giao diện người dùng}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\justifying
+\small
+
+\textbf{Đối tượng người dùng:} Ứng viên (18-35 tuổi) và Nhà tuyển dụng (HR chuyên nghiệp)
+
+\vspace{0.2cm}
+\textbf{Cơ sở thiết kế:} ISO 9241-210 - lấy người dùng làm trung tâm
+
+\vspace{0.2cm}
+\textbf{Ba nguyên tắc chính:}
+\begin{enumerate}
+    \item \textbf{Mã hóa màu sắc}: Xanh dương (tin tưởng), xanh lá (tích cực), đỏ (cảnh báo)
+    \item \textbf{Nhất quán điều hướng}: Ứng viên dùng thanh ngang, Nhà tuyển dụng dùng thanh dọc
+    \item \textbf{Phân cấp thị giác}: Cỡ chữ, tương phản cao, thông tin theo khối
+\end{enumerate}
+
+\column{0.4\textwidth}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/Candidate Home.png}
+    \caption{Giao diện trang chủ ứng viên}
+\end{figure}
+\end{columns}
+\end{frame}
+
+% 12. DEPLOYMENT DIAGRAM - GIỮ NGUYÊN NHƯNG ĐẢO XUỐNG CUỐI
+
+\begin{frame}{Kiến trúc vật lý - Deployment}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.54\textwidth]{figures/Deployment Diagram.png}
+    \caption{Sơ đồ triển khai hệ thống}
+\end{figure}
+\end{frame}
+
+% CHƯƠNG 3: KỸ THUẬT AI GỢI Ý VIỆC LÀM
+% File này chứa nội dung đã được sửa đổi theo yêu cầu
+
+\makesection{Kỹ thuật AI gợi ý việc làm}
+
+% PHẦN 1: CƠ SỞ LÝ THUYẾT
+
+%--- 1.1 BERT & PhoBERT - Nền tảng ---
+\begin{frame}{BERT \& PhoBERT – Biểu diễn ngữ cảnh ở mức Token}
+\justifying
+\small
+
+\textbf{BERT là gì?}
+\begin{itemize}
+    \item Mô hình Transformer Encoder học biểu diễn văn bản theo ngữ cảnh hai chiều
+    \item Được \textbf{pre-train} (huấn luyện trước) bằng Masked Language Modeling:
+    \begin{itemize}
+        \item Che ngẫu nhiên 15\% từ trong câu, mô hình dự đoán từ bị che
+        \item Học được ngữ cảnh từ cả hai phía (trái và phải)
+    \end{itemize}
+\end{itemize}
+
+% \vspace{0.2cm}
+% \textbf{Token-level embeddings:} BERT sinh \textit{1 vector riêng cho mỗi từ}
+% \begin{itemize}
+%     \item Input: \texttt{"Tôi là lập trình viên Python"}
+%     \item Output: \texttt{[CLS]} → vec$_1$, \texttt{Tôi} → vec$_2$, \texttt{là} → vec$_3$, ..., \texttt{Python} → vec$_6$, \texttt{[SEP]} → vec$_7$
+%     \item Mỗi vec có 768 chiều, phản ánh nghĩa của từ trong ngữ cảnh
+% \end{itemize}
+
+\vspace{0.2cm}
+\textbf{BERT dùng cho tác vụ gì?}
+\begin{itemize}
+    \item Phân loại văn bản: dùng vector \texttt{[CLS]} → FC layer → nhãn
+    \item NER: dùng vector mỗi token để gán nhãn (PERSON, ORG, LOC...)
+    \item Question Answering: tìm token bắt đầu/kết thúc câu trả lời
+\end{itemize}
+
+\end{frame}
+
+%--- 1.2 Sentence-BERT & SimCSE - Phương pháp ---
+\begin{frame}{Từ Token-level đến Sentence-level Embeddings}
+\justifying
+\small
+
+\textbf{Vấn đề khi dùng BERT cho sentence similarity:}
+\begin{itemize}
+    \item BERT output: \textit{N tokens} × 768 dim → cần gộp (mean/max pooling hoặc [CLS])
+    \item \textbf{Nhưng BERT không được train} để vector sau pooling phản ánh similarity!
+    \item Mean pooling thủ công → kém chính xác, không tối ưu
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Sentence-BERT:} Fine-tune BERT để học sentence embeddings
+\begin{itemize}
+    \item Kiến trúc Siamese: hai câu cùng encoder (shared weights)
+    \item Train với classification/regression objective → embeddings có ý nghĩa similarity
+    \item Encode 1 lần, so sánh nhanh bằng cosine similarity
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{SimCSE – Contrastive Learning đơn giản:}
+\begin{itemize}
+    \item \textbf{Supervised:} Dùng NLI data (entailment = positive, contradiction = negative)
+    \item Loss: Kéo câu cùng nghĩa gần, đẩy câu khác nghĩa xa
+\end{itemize}
+
+\end{frame}
+
+%--- 1.3 Mô hình VoVanPhuc - Áp dụng ---
+\begin{frame}{Mô hình VoVanPhuc/sup-SimCSE-PhoBERT}
+\justifying
+\small
+
+\textbf{Kiến trúc:} PhoBERT + Supervised SimCSE
+\begin{itemize}
+    \item \textbf{Base model:} PhoBERT-base (110M parameters)
+    \item \textbf{Training:} Supervised SimCSE trên Vietnamese NLI dataset
+    \item \textbf{Output:} Sentence embeddings 768 chiều, chuẩn hóa L2
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Ưu điểm cho hệ thống gợi ý:}
+\begin{itemize}
+    \item Tối ưu cho tiếng Việt (PhoBERT backbone)
+    \item Embedding ở mức câu → phù hợp cho matching CV–Job
+    \item Cosine similarity phản ánh độ tương đồng ngữ nghĩa tốt
+    \item Inference nhanh: encode 1 lần, tái sử dụng nhiều lần
+\end{itemize}
+
+
+\end{frame}
+
+
+
+%--- 1.2 FAISS ---
+\begin{frame}{Cơ sở lý thuyết: FAISS}
+\justifying
+\small
+
+\textbf{FAISS} (Facebook AI Similarity Search) - Thư viện tìm kiếm vector hiệu quả:
+
+\vspace{0.3cm}
+\textbf{Các loại Index:}
+\begin{itemize}
+    \item \textbf{Flat Index}: Tìm kiếm vét cạn, chính xác 100\% nhưng O(n).
+    \item \textbf{IVF (Inverted File)}: Phân cụm vector, chỉ tìm trong cụm gần nhất $\rightarrow$ O(log n).
+    \item \textbf{HNSW}: Đồ thị đa tầng, nhanh nhất nhưng tốn RAM.
+\end{itemize}
+
+\textbf{Hệ thống sử dụng IVF} vì cân bằng về tốc độ, tài nguyên sử dụng và hiệu năng tìm kiếm.
+
+\vspace{0.3cm}
+\textbf{Độ đo tương đồng Cosine:}
+$$\text{cosine}(\mathbf{a}, \mathbf{b}) = \frac{\mathbf{a} \cdot \mathbf{b}}{||\mathbf{a}|| \cdot ||\mathbf{b}||} \in [-1, 1]$$
+
+\end{frame}
+
+%--- 1.3 LỌC PHÂN TẦNG ---
+\begin{frame}{Cơ sở lý thuyết: Lọc phân tầng}
+\justifying
+\small
+
+\textbf{Cascade Filtering}: Xử lý dữ liệu theo nhiều giai đoạn tuần tự, từ thô đến tinh.
+
+\vspace{0.3cm}
+\textbf{Nguyên lý:}
+\begin{itemize}
+    \item Giai đoạn đầu: Tiêu chí đơn giản, chi phí thấp, loại bỏ nhanh phần lớn ứng viên không phù hợp.
+    \item Giai đoạn sau: Tiêu chí phức tạp hơn, xử lý trên tập nhỏ đã được lọc.
+    \item Kết quả: Tối ưu chi phí tính toán tổng thể.
+\end{itemize}
+
+% \vspace{0.3cm}
+% \textbf{Ứng dụng trong hệ thống:}
+% \begin{enumerate}
+%     \item \textbf{Vòng 1 - Tiêu đề}: FAISS tìm kiếm K1 jobs theo title embedding.
+%     \item \textbf{Vòng 2 - Kinh nghiệm}: So khớp experience với requirements $\rightarrow$ K2 jobs.
+%     \item \textbf{Vòng 3 - Kỹ năng}: So khớp skills embedding $\rightarrow$ K jobs cuối cùng.
+% \end{enumerate}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/Lọc phân tầng.png}
+    \caption{Kiến trúc lọc phân tầng ba giai đoạn}
+\end{figure}
+
+\end{frame}
+
+% PHẦN 2: CÀI ĐẶT
+
+%--- 2.1 KIẾN TRÚC TỔNG THỂ ---
+\begin{frame}{Cài đặt: Kiến trúc tổng thể}
+Hệ thống gợi ý việc làm được thiết kế theo kiến trúc module hóa, trong đó các thành phần được tổ chức thành các module độc lập với trách nhiệm rõ ràng.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.65\textwidth]{figures/AI-Architecture.png}
+    \caption{Kiến trúc hệ thống AI gợi ý}
+\end{figure}
+
+% \vspace{-0.3cm}
+% \textbf{Các thành phần:}
+% \begin{itemize}
+%     \item \textbf{Embedding Service}: PhoBERT-SimCSE tạo vector 768 chiều.
+%     \item \textbf{Vector Store}: PostgreSQL (persistent) + FAISS (in-memory, fast).
+%     \item \textbf{Recommendation Engine}: Cascade filtering 3 vòng.
+%     \item \textbf{API}: Flask RESTful API với endpoint \texttt{POST /recommend}.
+% \end{itemize}
+
+\end{frame}
+
+%--- 2.2 CHIẾN LƯỢC NHÚNG VĂN BẢN ---
+\begin{frame}{Cài đặt: Chiến lược nhúng văn bản}
+\justifying
+\small
+
+\textbf{Nhúng riêng từng trường:} CV và Job được nhúng thành 3 vectors riêng biệt
+
+\vspace{0.2cm}
+\textbf{Lợi ích:}
+\begin{itemize}
+    \item So sánh có mục đích: title-title, skills-skills
+    \item Kiểm soát trọng số từng yếu tố trong lọc phân tầng
+    \item Linh hoạt khi dữ liệu thiếu
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.55\textwidth]{figures/Chiến lược nhúng.png}
+    \caption{Các trường được nhúng và ánh xạ trong lọc phân tầng}
+\end{figure}
+
+\end{frame}
+
+% %--- 2.3 LƯU TRỮ ---
+% \begin{frame}{Cài đặt: Lưu trữ vector}
+% \justifying
+
+% \textbf{Chiến lược lưu trữ kép:}
+
+% \vspace{0.3cm}
+% \textbf{1. PostgreSQL (Persistent Storage):}
+% \begin{itemize}
+%     \item Lưu vector dưới dạng JSONB/Bytea
+%     \item Bảng CV: (id, titleEmbedding, skillsEmbedding, experienceEmbedding)
+%     \item Bảng Job: (id, titleEmbedding, requirementEmbedding, skillsEmbedding)
+%     \item Đảm bảo durability và backup
+% \end{itemize}
+
+% \vspace{0.3cm}
+% \textbf{2. FAISS (In-Memory Cache):}
+% \begin{itemize}
+%     \item Load vectors từ PostgreSQL khi khởi động
+%     \item Xây dựng IVF index với ncluster = sqrt(N)
+%     \item Cập nhật realtime khi có CV/Job mới
+%     \item Tốc độ truy vấn: 1-3ms
+% \end{itemize}
+
+% \end{frame}
+
+%--- 2.4 LUỒNG TRUY VẤN ---
+\begin{frame}{Cài đặt: Luồng truy vấn}
+\begin{columns}[T]
+\column{0.65\textwidth}
+\justifying
+\small
+
+\textbf{Quy trình gợi ý việc làm cho CV gồm 5 bước:}
+
+\vspace{0.3cm}
+\begin{enumerate}
+    \item \textbf{Load dữ liệu}: Tải danh sách CV và Job từ PostgreSQL với các vector nhúng đã tính trước
+    
+    \item \textbf{Kiểm tra thay đổi}: Kiểm tra mã băm nội dung (content hash) để xác định bản ghi thay đổi, chỉ tính lại embedding cho các bản ghi này
+    
+    \item \textbf{Xây dựng FAISS index}: Xây dựng hoặc tải chỉ mục FAISS từ các vector tiêu đề công việc
+    
+    \item \textbf{Áp dụng lọc phân tầng}: Chạy thuật toán lọc phân tầng 3 vòng để tìm $K_3$ công việc phù hợp nhất cho mỗi CV
+    
+    \item \textbf{Lưu kết quả}: Lưu kết quả gợi ý vào bảng RecommendJobForCV
+\end{enumerate}
+
+% \textbf{Input:} CV ID $\rightarrow$ Load vectors từ PostgreSQL
+
+% \vspace{0.2cm}
+% \textbf{Tham số:} $K_1=1000$, $K_2=300$, $K_3=30$ (cấu hình linh hoạt)
+
+% \vspace{0.2cm}
+% \textbf{Vòng 1 - Tiêu đề (FAISS):}
+% \begin{itemize}
+%     \item Tìm $K_1$ jobs có title tương đồng nhất
+%     \item Sử dụng FAISS IVF index, độ tương đồng cosin
+% \end{itemize}
+
+% \vspace{0.15cm}
+% \textbf{Vòng 2 - Kinh nghiệm:}
+% \begin{itemize}
+%     \item So sánh expEmb của CV với requirementEmb
+%     \item Chọn $K_2$ jobs khớp nhất từ $K_1$ jobs
+%     \item Skip nếu CV không có kinh nghiệm
+% \end{itemize}
+
+% \vspace{0.15cm}
+% \textbf{Vòng 3 - Kỹ năng:}
+% \begin{itemize}
+%     \item So sánh skillsEmb với jobSkillsEmb
+%     \item Trả về $K_3$ jobs cuối cùng
+%     \item Skip nếu CV không có kỹ năng
+% \end{itemize}
+
+\column{0.3\textwidth}
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/Truy vấn gợi ý.png}
+    \caption{Luồng xử lý lọc phân tầng}
+\end{figure}
+\end{columns}
+\end{frame}
+
+%--- 2.5 TỐI ƯU HÓA ---
+\begin{frame}{Cài đặt: Tối ưu hóa}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\justifying
+\small
+
+\textbf{Hệ thống áp dụng 3 chiến lược tối ưu chính:}
+
+\vspace{0.1cm}
+\textbf{1. Bộ nhớ đệm mã băm nội dung:}
+\begin{itemize}
+    \item Tính hash từ nội dung: MD5(JSON(title, skills, ...))
+    \item Chỉ tính lại embedding khi hash thay đổi
+    % \item Giảm 95\% tính toán nếu chỉ 5\% dữ liệu thay đổi
+\end{itemize}
+
+\vspace{0.1cm}
+\textbf{2. Lọc công việc đang hoạt động:}
+\begin{itemize}
+    \item Chỉ xử lý jobs có status='ACTIVE'
+    \item Loại bỏ jobs đã hết hạn (expiresAt < NOW)
+    % \item Giảm khối lượng tính toán, đảm bảo kết quả hiệu lực
+\end{itemize}
+
+\vspace{0.1cm}
+\textbf{3. Cập nhật định kỳ:}
+\begin{itemize}
+    \item Chu kỳ mặc định: 12 giờ (cấu hình linh hoạt)
+    % \item Cân bằng độ tươi mới và tải hệ thống
+\end{itemize}
+
+\column{0.4\textwidth}
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/Tối ưu hóa.png}
+    \caption{Luồng xử lý bộ nhớ đệm mã băm nội dung}
+\end{figure}
+\end{columns}
+\end{frame}
+
+% PHẦN 3: ĐÁNH GIÁ
+
+%--- 3.1 BỘ DỮ LIỆU ---
+\begin{frame}{Đánh giá: Bộ dữ liệu}
+\justifying
+
+\textbf{Dataset thu thập:}
+\begin{itemize}
+    \item \textbf{Nguồn}: TopCV, VietnamWorks (crawled với permission)
+    \item \textbf{Quy mô}: 5,000 CVs + 10,000 Jobs (tiếng Việt)
+    \item \textbf{Phân chia}: 70\% train / 15\% validation / 15\% test
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Ground truth:}
+\begin{itemize}
+    \item Thu thập từ thực tế: CV đã ứng tuyển thành công vào Job
+    \item Labeling thủ công: 3 HR experts đánh giá độ phù hợp (scale 1-5)
+    \item Inter-rater agreement: Cohen's Kappa = 0.78 (substantial)
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Đặc điểm dữ liệu:}
+\begin{itemize}
+    \item Ngành nghề: IT (60\%), Marketing (20\%), Business (10\%), Others (10\%)
+    \item Experience level: Intern-Junior (40\%), Mid (35\%), Senior+ (25\%)
+\end{itemize}
+
+\end{frame}
+
+%--- 3.2 ĐỘ ĐO ---
+\begin{frame}{Đánh giá: Độ đo}
+\justifying
+
+\textbf{1. Mean Reciprocal Rank (MRR):} Đo vị trí relevant item đầu tiên trong danh sách gợi ý.
+$$MRR = \frac{1}{|Q|} \sum_{i=1}^{|Q|} \frac{1}{rank_i}$$
+
+\vspace{0.3cm}
+\textbf{2. Normalized Discounted Cumulative Gain (NDCG@K):} Đo chất lượng ranking, rel$_i$ là độ phù hợp tại vị trí i.
+$$NDCG@K = \frac{DCG@K}{IDCG@K}, \quad DCG@K = \sum_{i=1}^{K} \frac{2^{rel_i} - 1}{\log_2(i+1)}$$
+
+\vspace{0.3cm}
+\textbf{3. Hit Rate@K:} Xác suất có ít nhất 1 kết quả phù hợp trong top-K.
+$$HitRate@K = \frac{\text{Số queries có relevant item trong top-K}}{|Q|}$$
+
+
+\end{frame}
+
+%--- 3.3 KẾT QUẢ ---
+\begin{frame}{Đánh giá: Kết quả thực nghiệm}
+\justifying
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Phương pháp} & \textbf{MRR} & \textbf{NDCG@10} & \textbf{Hit@10} & \textbf{Latency} \\
+\hline
+Keyword Matching & 0.42 & 0.51 & 0.68 & <10ms \\
+\hline
+TF-IDF + Cosine & 0.56 & 0.64 & 0.79 & ~20ms \\
+\hline
+mBERT + Flat & 0.71 & 0.76 & 0.89 & ~500ms \\
+\hline
+\textbf{PhoBERT-SimCSE + FAISS} & \textbf{0.78} & \textbf{0.82} & \textbf{0.93} & \textbf{~50ms} \\
+\hline
++ Cascade (ours) & \textbf{0.81} & \textbf{0.85} & \textbf{0.95} & \textbf{~30ms} \\
+\hline
+\end{tabular}
+\end{table}
+
+\vspace{0.2cm}
+\textbf{Nhận xét:}
+\begin{itemize}
+    \item PhoBERT vượt mBERT \textbf{+7\% MRR} nhờ hiểu tiếng Việt tốt hơn
+    \item FAISS giảm latency từ 500ms xuống 50ms (10x)
+    \item Cascade filtering tăng accuracy \textbf{+3\%} và giảm latency thêm 40\%
+\end{itemize}
+
+\end{frame}
+
+% HẾT CHƯƠNG 3
+
+
+% CHƯƠNG 4: KẾT QUẢ ĐẠT ĐƯỢC VÀ KẾT LUẬN
+% File này chứa nội dung đã được sửa đổi theo yêu cầu
+
+\makesection{Kết quả đạt được và Kết luận}
+
+% 1. MÔI TRƯỜNG TRIỂN KHAI (BẢNG)
+
+\begin{frame}{Công nghệ và Môi trường triển khai}
+\justifying
+
+\textbf{Kiến trúc triển khai:}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|p{4cm}|p{3.5cm}|p{3cm}|}
+\hline
+\textbf{Thành phần} & \textbf{Công nghệ} & \textbf{Nơi triển khai} \\
+\hline
+\textbf{Frontend} & React, TypeScript, Vite & Firebase Hosting \\
+\hline
+\textbf{Backend Server} & Node.js, Express & Google Cloud VM \\
+\hline
+\textbf{Database} & PostgreSQL, Prisma ORM & Google Cloud VM \\
+\hline
+\textbf{AI/Recommend Service} & Python, FastAPI, PhoBERT, FAISS & Google Cloud VM \\
+\hline
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+\textbf{Dịch vụ ngoài:}
+\begin{itemize}
+    \item \textbf{Firebase Storage}: Lưu trữ file (CV, ảnh đại diện, logo công ty)
+    \item \textbf{GitHub}: Quản lý mã nguồn
+\end{itemize}
+
+\end{frame}
+
+% 2. TRIỂN KHAI CODE (CẤU TRÚC MÃ NGUỒN)
+
+\begin{frame}[fragile]{Triển khai code - cấu trúc mã nguồn}
+\justifying
+
+\textbf{Kiến trúc:} Modular Clean Architecture, kết hợp ưu điểm
+của Package by Feature và Layered Architecture.
+\begin{columns}[T]
+\column{0.5\textwidth}
+\tiny
+\vspace{0.2cm}
+\textbf{Cấu trúc tổng thể:}
+\begin{verbatim}
+src/
+├── app.ts                    # Cấu hình Express
+├── server.ts                 # Điểm khởi động server
+├── core/                     # Hạ tầng framework
+│   ├── container/            # Dependency Injection
+│   ├── middleware/           # Xác thực, xử lý lỗi
+│   └── routes/               # Tổng hợp các route API
+├── modules/                  # Các module chức năng
+│   ├── user/                 # Quản lý người dùng
+│   ├── company/              # Quản lý công ty
+│   ├── job/                  # Quản lý tin tuyển dụng
+│   ├── cv/                   # Quản lý CV
+│   ├── application/          # Quản lý đơn ứng tuyển
+│   └── notification/         # Quản lý thông báo
+└── shared/                   # Phần dùng chung
+    ├── constants/            # Hằng số, mã trạng thái
+    ├── domain/               # Lỗi, interface dùng chung
+    └── infrastructure/       # Kết nối database, dịch vụ ngoài
+\end{verbatim}
+
+\column{0.45\textwidth}
+\vspace{0.2cm}
+\tiny
+\textbf{Mỗi module được tổ chức theo 4 tầng:}
+\begin{verbatim}
+{module}/
+├── domain/                   # Tầng nghiệp vụ lõi
+│   ├── entities/             # Thực thể miền
+│   ├── enums/                # Kiểu liệt kê
+│   └── repositories/         # Interface repository 
+├── application/              # Tầng ứng dụng
+│   ├── dtos/                 # Đối tượng truyền dữ liệu
+│   ├── use-cases/            # Logic nghiệp vụ
+│   └── helpers/              # Mapper, tiện ích
+├── infrastructure/           # Tầng hạ tầng
+│   ├── mappers/              # Chuyển đổi Entity <-> Model
+│   └── repositories/         # Triển khai repository
+└── interfaces/               # Tầng giao tiếp
+    ├── controllers/          # Controller xử lý HTTP
+    ├── routes/               # Định tuyến Express
+    └── validators/           # Schema validate 
+\end{verbatim}
+
+% \column{0.45\textwidth}
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=\textwidth]{figures/structure.png}
+%     \caption{4 tầng trong module User}
+% \end{figure}
+\end{columns}
+\end{frame}
+
+% 3. GIAO DIỆN 
+
+\begin{frame}{Giao diện hệ thống - Ứng viên}
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.8\linewidth]{figures/CandidateHome.png}
+	\caption{Giao diện trang chủ của ứng viên}
+\end{figure}
+
+\end{frame}
+\begin{frame}{Giao diện hệ thống - Ứng viên}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.75\linewidth]{figures/RecommendJobs.png}
+	\caption{Giao diện việc làm gợi ý}
+\end{figure}
+\end{frame}
+\begin{frame}{Giao diện hệ thống - Ứng viên}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.55\linewidth]{figures/mobile1.jpg}
+	\caption{Giao diện trên điện thoại di động}
+\end{figure}
+\end{frame}
+\begin{frame}{Giao diện hệ thống - Ứng viên}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figures/mobile2.jpg}
+	\caption{Giao diện trên thiết bị máy tính bảng}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Giao diện hệ thống - Nhà tuyển dụng}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/Recruiter Homepage.png}
+    \caption{Dashboard nhà tuyển dụng quản lý đơn ứng tuyển}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Kết luận}
+\justifying
+
+\textbf{Các kết quả đạt được:}
+
+\begin{itemize}
+    \item Khảo sát các hệ thống tuyển dụng hiện có (VietnamWorks, TopCV, CareerViet)
+
+    \item Phân tích yêu cầu hệ thống tuyển dụng trực tuyến
+
+    \item Thiết kế hệ thống theo mô hình Clean Architecture với 6 module, 4 tầng
+
+    \item Cài đặt hệ thống 3 thành phần (Backend, Frontend, AI Service) và triển khai trên cloud
+
+    \item Xây dựng module gợi ý với PhoBERT, FAISS và thuật toán lọc ba tầng
+
+    \item Đánh giá hệ thống với MRR, NDCG@10, Hit Rate
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Hạn chế và Hướng phát triển}
+\justifying
+
+\textbf{Hạn chế của đồ án:}
+
+\begin{itemize}
+    \item Mức cải thiện so với phương pháp cơ sở còn hạn chế (hai tầng lọc sau đóng góp 8\%)
+
+    \item PhoBERT chưa được tinh chỉnh trên kho ngữ liệu tuyển dụng tiếng Việt
+
+    \item Chưa triển khai quy trình CI/CD tự động
+
+    \item Chưa đánh giá khả năng chịu tải và bảo mật trong môi trường thực tế
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Hướng phát triển:}
+
+\begin{itemize}
+    \item Tinh chỉnh PhoBERT và nghiên cứu learning-to-rank
+
+    \item Triển khai CI/CD tự động (GitHub Actions/GitLab CI)
+
+    \item Triển khai môi trường vận hành với giám sát, logging và kiểm toán bảo mật
+\end{itemize}
+
+\end{frame}
+
+% Final PAGE
+% Set the text that is showed on the final slide
+\finalpagetext {Cảm ơn thầy cô đã chú ý lắng nghe!}
+%----------------------------------------------------------------------------------------
+\makefinalpage
+
+%----------------------------------------------------------------------------------------
+\end{document}

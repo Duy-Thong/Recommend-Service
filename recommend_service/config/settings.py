@@ -34,6 +34,9 @@ class Settings:
     # Batch size for processing
     batch_size: int = int(os.getenv("BATCH_SIZE", "100"))
 
+    # Number of worker processes for multiprocessing (0 = disable, -1 = use all CPU cores)
+    num_workers: int = int(os.getenv("NUM_WORKERS", "0"))
+
     @property
     def database_url_clean(self) -> str:
         """Remove schema parameter for psycopg2 compatibility"""

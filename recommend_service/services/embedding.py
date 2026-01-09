@@ -2,23 +2,27 @@ import logging
 from typing import List, Optional
 
 import torch
-from transformers import AutoModel, AutoTokenizer
+from sentence_transformers import SentenceTransformer
 
 from recommend_service.config import settings
 
 logger = logging.getLogger(__name__)
 
+# Set torch to use multiple threads for better CPU performance
+if settings.num_workers > 0:
+    torch.set_num_threads(settings.num_workers)
+    logger.info(f"PyTorch set to use {settings.num_workers} threads")
+
 
 class EmbeddingService:
     def __init__(self):
         self.model_name = settings.embedding_model
-        self.tokenizer = None
         self.model = None
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self._initialized = False
 
     def initialize(self) -> None:
-        """Load the PhoBERT model and tokenizer"""
+        """Load the sentence-transformers model"""
         if self._initialized:
             return
 
@@ -26,12 +30,11 @@ class EmbeddingService:
         logger.info(f"Using device: {self.device}")
 
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            self.model = AutoModel.from_pretrained(self.model_name)
-            self.model.to(self.device)
-            self.model.eval()
+            # Use SentenceTransformer - it handles pooling automatically
+            self.model = SentenceTransformer(self.model_name, device=self.device)
             self._initialized = True
             logger.info("Embedding model loaded successfully")
+            logger.info("Using sentence-transformers library - pooling handled automatically")
         except Exception as e:
             logger.error(f"Failed to load embedding model: {e}")
             raise
@@ -45,23 +48,9 @@ class EmbeddingService:
             return []
 
         try:
-            # Tokenize
-            inputs = self.tokenizer(
-                text,
-                return_tensors="pt",
-                padding=True,
-                truncation=True,
-                max_length=256
-            )
-            inputs = {k: v.to(self.device) for k, v in inputs.items()}
-
-            # Generate embedding
-            with torch.no_grad():
-                outputs = self.model(**inputs)
-                # Use mean pooling of last hidden state
-                embedding = outputs.last_hidden_state.mean(dim=1).squeeze()
-
-            return embedding.cpu().tolist()
+            # sentence-transformers handles tokenization and pooling automatically
+            embedding = self.model.encode(text, convert_to_tensor=False, show_progress_bar=False)
+            return embedding.tolist()
         except Exception as e:
             logger.error(f"Failed to generate embedding for text: {e}")
             return []
@@ -77,23 +66,14 @@ class EmbeddingService:
             return [[] for _ in texts]
 
         try:
-            # Tokenize batch
-            inputs = self.tokenizer(
+            # sentence-transformers handles batch processing efficiently
+            embeddings = self.model.encode(
                 valid_texts,
-                return_tensors="pt",
-                padding=True,
-                truncation=True,
-                max_length=256
+                convert_to_tensor=False,
+                show_progress_bar=False,
+                batch_size=32  # Internal batch size for encoding
             )
-            inputs = {k: v.to(self.device) for k, v in inputs.items()}
-
-            # Generate embeddings
-            with torch.no_grad():
-                outputs = self.model(**inputs)
-                # Use mean pooling of last hidden state
-                embeddings = outputs.last_hidden_state.mean(dim=1)
-
-            result = embeddings.cpu().tolist()
+            result = embeddings.tolist()
 
             # Map back to original positions (handle empty texts)
             final_result = []
